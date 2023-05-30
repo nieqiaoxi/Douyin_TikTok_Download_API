@@ -287,6 +287,8 @@ async def hybrid_parsing(request: Request, url: str, minimal: bool = False):
 """ ________________________⬇️抖音视频解析端点(Douyin video parsing endpoint)⬇️________________________"""
 
 
+
+
 # 获取抖音单个视频数据/Get Douyin single video data
 @app.get("/douyin_video_data/", response_class=ORJSONResponse, response_model=API_Video_Response, tags=["Douyin"])
 @limiter.limit(Rate_Limit)
@@ -672,8 +674,8 @@ async def download_file_hybrid(request: Request, url: str, prefix: bool = True, 
             print('url: ', url)
             zip_file_name = file_name_prefix + platform + '_' + aweme_id + '_images.zip' if not watermark else file_name_prefix + platform + '_' + aweme_id + '_images_watermark.zip'
             zip_file_path = root_path + "/" + zip_file_name
-            print('zip_file_name: ', zip_file_name)
-            print('zip_file_path: ', zip_file_path)
+            # print('zip_file_name: ', zip_file_name)
+            # print('zip_file_path: ', zip_file_path)
             # 判断文件是否存在，存在就直接返回、
             if os.path.exists(zip_file_path):
                 print('文件已存在，直接返回')
@@ -686,21 +688,30 @@ async def download_file_hybrid(request: Request, url: str, prefix: bool = True, 
                         file_format = content_type.split('/')[1]
                         r = await res.content.read()
                 index = int(url.index(i))
-                file_name = file_name_prefix + platform + '_' + aweme_id + '_' + str(
+                if res.status != 200 : continue
+                # file_name = file_name_prefix + platform + '_' + aweme_id + '_' + str(
+                #     index + 1) + '.' + file_format if not watermark else \
+                #     file_name_prefix + platform + '_' + aweme_id + '_' + str(
+                #         index + 1) + '_watermark' + '.' + file_format
+                file_name = data.get('author').get('nickname') + '_' + data.get('author').get('unique_id') + '_' + str(
                     index + 1) + '.' + file_format if not watermark else \
-                    file_name_prefix + platform + '_' + aweme_id + '_' + str(
+                    data.get('author').get('nickname') + '_' + data.get('author').get('unique_id') + '_' + aweme_id + '_' + str(
                         index + 1) + '_watermark' + '.' + file_format
                 file_path = root_path + "/" + file_name
+                if os.path.exists(file_path): print(file_path.split('/')[2],'已存在'); continue
                 file_path_list.append(file_path)
-                print('file_path: ', file_path)
-                with open(file_path, 'wb') as f:
-                    f.write(r)
-                if len(url) == len(file_path_list):
-                    zip_file = zipfile.ZipFile(zip_file_path, 'w')
-                    for f in file_path_list:
-                        zip_file.write(os.path.join(f), f, zipfile.ZIP_DEFLATED)
-                    zip_file.close()
-                    return FileResponse(path=zip_file_path, media_type='zip', filename=zip_file_name)
+                # print('file_path: ', file_path)
+                with open(file_path, 'wb') as f: f.write(r) ,print('success: ', file_path.split('/')[2])
+            
+                # if len(url) == len(file_path_list):                   
+                    # zip_file = zipfile.ZipFile(zip_file_path, 'w')
+                    # for f in file_path_list:
+                    #     zip_file.write(os.path.join(f), f, zipfile.ZIP_DEFLATED)
+                    # zip_file.close()
+                    # return FileResponse(path=zip_file_path, media_type='zip', filename=zip_file_name)
+            # if len(url) != len(file_path_list): 
+            #       print('download_file_hybrid()')
+            #       await download_file_hybrid(url)
         else:
             return ORJSONResponse(data)
 
@@ -850,10 +861,10 @@ async def startup_event():
     # 创建一个清理下载目录定时器线程并启动
     # Create a timer thread to clean up the download directory and start it
     download_path_clean_switches = True if config["Web_API"]["Download_Path_Clean_Switch"] == "True" else False
-    if download_path_clean_switches:
-        # 启动清理线程/Start cleaning thread
-        thread_1 = threading.Thread(target=cleanup_path)
-        thread_1.start()
+    # if download_path_clean_switches:
+    #     # 启动清理线程/Start cleaning thread
+    #     thread_1 = threading.Thread(target=cleanup_path)
+    #     thread_1.start()
 
 
 if __name__ == '__main__':
