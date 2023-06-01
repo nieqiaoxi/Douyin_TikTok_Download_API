@@ -291,27 +291,31 @@ async def main():
             # 如果是视频/If it's video
             if url_type == t('视频', 'Video'):
                 # 添加视频信息
-                table_list.insert(4, [t('视频链接-水印', 'Video URL-Watermark'),
-                                      put_link(t('点击查看', 'Click to view'),
-                                               data.get('video_data').get('wm_video_url_HQ'), new_window=True)])
+                # table_list.insert(4, [t('视频链接-水印', 'Video URL-Watermark'),
+                #                       put_link(t('点击查看', 'Click to view'),
+                #                                data.get('video_data').get('wm_video_url_HQ'), new_window=True)])
                 table_list.insert(5, [t('视频链接-无水印', 'Video URL-No Watermark'),
                                       put_link(t('点击查看', 'Click to view'),
                                                data.get('video_data').get('nwm_video_url_HQ'), new_window=True)])
-                table_list.insert(6, [t('视频下载-水印', 'Video Download-Watermark'),
-                                      put_link(t('点击下载', 'Click to download'),
-                                               f"{config['Web_API']['Domain']}/download?url={url}&prefix=true&watermark=true",
-                                               new_window=True)])
+                # table_list.insert(6, [t('视频下载-水印', 'Video Download-Watermark'),
+                #                       put_link(t('点击下载', 'Click to download'),
+                #                                f"{config['Web_API']['Domain']}/download?url={url}&prefix=true&watermark=true",
+                #                                new_window=True)])
                 table_list.insert(6, [t('视频下载-无水印', 'Video Download-No-Watermark'),
                                       put_link(t('点击下载', 'Click to download'),
                                                f"{config['Web_API']['Domain']}/download?url={url}&prefix=true&watermark=false",
                                                new_window=True)])
+                table_list.insert(6, [t('音频下载', 'Video Download-No-Watermark'),
+                                      put_link(t('点击下载', 'Click to download'),
+                                               f"{config['Web_API']['Domain']}/download?url={url}&prefix=true&watermark=false&audio=true",
+                                               new_window=True)])
             # 如果是图片/If it's image
             elif url_type == t('图片', 'Image'):
                 # 添加图片下载链接
-                table_list.insert(4, [t('图片打包下载-水印', 'Download images ZIP-Watermark'),
-                                      put_link(t('点击下载', 'Click to download'),
-                                               f"{config['Web_API']['Domain']}/download?url={url}&prefix=true&watermark=true",
-                                               new_window=True)])
+                # table_list.insert(4, [t('图片打包下载-水印', 'Download images ZIP-Watermark'),
+                #                       put_link(t('点击下载', 'Click to download'),
+                #                                f"{config['Web_API']['Domain']}/download?url={url}&prefix=true&watermark=true",
+                #                                new_window=True)])
                 table_list.insert(5, [t('图片打包下载-无水印', 'Download images ZIP-No-Watermark'),
                                       put_link(t('点击下载', 'Click to download'),
                                                f"{config['Web_API']['Domain']}/download?url={url}&prefix=true&watermark=false",

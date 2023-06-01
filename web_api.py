@@ -25,6 +25,8 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from pydantic import BaseModel
 from starlette.responses import RedirectResponse
+import moviepy.editor as mp
+
 
 from scraper import Scraper
 
@@ -602,10 +604,12 @@ async def Get_Shortcut():
 """ ________________________⬇️下载文件端点/函数(Download file endpoints/functions)⬇️________________________"""
 
 
+
+
 # 下载文件端点/Download file endpoint
 @app.get("/download", tags=["Download"])
 @limiter.limit(Rate_Limit)
-async def download_file_hybrid(request: Request, url: str, prefix: bool = True, watermark: bool = False):
+async def download_file_hybrid(request: Request, url: str, prefix: bool = True, watermark: bool = False,audio: bool=False):
     """
         ## 用途/Usage
         ### [中文]
@@ -642,8 +646,10 @@ async def download_file_hybrid(request: Request, url: str, prefix: bool = True, 
         # 查看目录是否存在，不存在就创建
         if not os.path.exists(root_path):
             os.makedirs(root_path)
+        name=  data.get('author').get('nickname') + '_' + data.get('author').get('unique_id')
         if url_type == 'video':
-            file_name = file_name_prefix + platform + '_' + aweme_id + '.mp4' if not watermark else file_name_prefix + platform + '_' + aweme_id + '_watermark' + '.mp4'
+            # file_name = file_name_prefix + platform + '_' + aweme_id + '.mp4' if not watermark else file_name_prefix + platform + '_' + aweme_id + '_watermark' + '.mp4'
+            file_name = name + '_' + aweme_id + '.mp4' if not watermark else name + '_' + aweme_id + '_watermark' + '.mp4'
             url = data.get('video_data').get('nwm_video_url_HQ') if not watermark else data.get('video_data').get(
                 'wm_video_url_HQ')
             print('url: ', url)
@@ -667,6 +673,10 @@ async def download_file_hybrid(request: Request, url: str, prefix: bool = True, 
                             r = await res.content.read()
                 with open(file_path, 'wb') as f:
                     f.write(r)
+                if audio:  # 转音频
+                  clip = mp.AudioFileClip(file_path) 
+                  clip.write_audiofile(file_path.replace('mp4','mp3'))
+                  # if os.path.isfile(file_path): os.remove(file_path)
                 return FileResponse(path=file_path, media_type='video/mp4', filename=file_name)
         elif url_type == 'image':
             url = data.get('image_data').get('no_watermark_image_list') if not watermark else data.get(
@@ -693,9 +703,9 @@ async def download_file_hybrid(request: Request, url: str, prefix: bool = True, 
                 #     index + 1) + '.' + file_format if not watermark else \
                 #     file_name_prefix + platform + '_' + aweme_id + '_' + str(
                 #         index + 1) + '_watermark' + '.' + file_format
-                file_name = data.get('author').get('nickname') + '_' + data.get('author').get('unique_id') + '_' + str(
+                file_name = name + '_'+ aweme_id + str(
                     index + 1) + '.' + file_format if not watermark else \
-                    data.get('author').get('nickname') + '_' + data.get('author').get('unique_id') + '_' + aweme_id + '_' + str(
+                    name + '_' + aweme_id + '_' + str(
                         index + 1) + '_watermark' + '.' + file_format
                 file_path = root_path + "/" + file_name
                 if os.path.exists(file_path): print(file_path.split('/')[2],'已存在'); continue
@@ -714,6 +724,7 @@ async def download_file_hybrid(request: Request, url: str, prefix: bool = True, 
             #       await download_file_hybrid(url)
         else:
             return ORJSONResponse(data)
+
 
 
 # 批量下载文件端点/Batch download file endpoint
