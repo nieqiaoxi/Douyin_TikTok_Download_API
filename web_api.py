@@ -653,12 +653,13 @@ async def download_file_hybrid(request: Request, url: str, prefix: bool = True, 
             url = data.get('video_data').get('nwm_video_url_HQ') if not watermark else data.get('video_data').get(
                 'wm_video_url_HQ')
             print('url: ', url)
-            file_path = root_path + "/" + file_name
+            if not os.path.exists(root_path+'/video'): os.makedirs(root_path+'/video')
+            file_path = root_path + "/video/" + file_name
             print('file_path: ', file_path)
             # 判断文件是否存在，存在就直接返回
             if os.path.exists(file_path):
                 print('文件已存在，直接返回')
-                return FileResponse(path=file_path, media_type='video/mp4', filename=file_name)
+                # return FileResponse(path=file_path, media_type='video/mp4', filename=file_name)
             else:
                 if platform == 'douyin':
                     async with aiohttp.ClientSession() as session:
@@ -677,20 +678,11 @@ async def download_file_hybrid(request: Request, url: str, prefix: bool = True, 
                   clip = mp.AudioFileClip(file_path) 
                   clip.write_audiofile(file_path.replace('mp4','mp3'))
                   # if os.path.isfile(file_path): os.remove(file_path)
-                return FileResponse(path=file_path, media_type='video/mp4', filename=file_name)
+                # return FileResponse(path=file_path, media_type='video/mp4', filename=file_name)
         elif url_type == 'image':
             url = data.get('image_data').get('no_watermark_image_list') if not watermark else data.get(
                 'image_data').get('watermark_image_list')
             print('url: ', url)
-            zip_file_name = file_name_prefix + platform + '_' + aweme_id + '_images.zip' if not watermark else file_name_prefix + platform + '_' + aweme_id + '_images_watermark.zip'
-            zip_file_path = root_path + "/" + zip_file_name
-            # print('zip_file_name: ', zip_file_name)
-            # print('zip_file_path: ', zip_file_path)
-            # 判断文件是否存在，存在就直接返回、
-            if os.path.exists(zip_file_path):
-                print('文件已存在，直接返回')
-                return FileResponse(path=zip_file_path, media_type='zip', filename=zip_file_name)
-            file_path_list = []
             for i in url:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(url=i, headers=headers) as res:
@@ -704,24 +696,10 @@ async def download_file_hybrid(request: Request, url: str, prefix: bool = True, 
                 #     file_name_prefix + platform + '_' + aweme_id + '_' + str(
                 #         index + 1) + '_watermark' + '.' + file_format
                 file_name = name + '_'+ aweme_id + str(
-                    index + 1) + '.' + file_format if not watermark else \
-                    name + '_' + aweme_id + '_' + str(
-                        index + 1) + '_watermark' + '.' + file_format
+                    index + 1) + '.' + file_format if not watermark else name + '_' + aweme_id + '_' + str( index + 1) + '_watermark' + '.' + file_format
                 file_path = root_path + "/" + file_name
                 if os.path.exists(file_path): print(file_path.split('/')[2],'已存在'); continue
-                file_path_list.append(file_path)
-                # print('file_path: ', file_path)
                 with open(file_path, 'wb') as f: f.write(r) ,print('success: ', file_path.split('/')[2])
-            
-                # if len(url) == len(file_path_list):                   
-                    # zip_file = zipfile.ZipFile(zip_file_path, 'w')
-                    # for f in file_path_list:
-                    #     zip_file.write(os.path.join(f), f, zipfile.ZIP_DEFLATED)
-                    # zip_file.close()
-                    # return FileResponse(path=zip_file_path, media_type='zip', filename=zip_file_name)
-            # if len(url) != len(file_path_list): 
-            #       print('download_file_hybrid()')
-            #       await download_file_hybrid(url)
         else:
             return ORJSONResponse(data)
 
