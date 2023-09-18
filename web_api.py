@@ -1,3 +1,11 @@
+'''
+Author: dengfusheng 
+Date: 2023-06-01 14:01:04
+LastEditTime: 2023-09-18 18:14:54
+LastEditors: dengfusheng@hqshuke.com
+FilePath: \Douyin_TikTok_Download_API\web_api.py
+Description: 
+'''
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 # @Author: https://github.com/Evil0ctal/
@@ -65,8 +73,7 @@ tags_metadata = [
         "description": "All TikTok API Endpoints/所有TikTok接口节点",
     },
     {
-        "name":
-        "Download",
+        "name": "Download",
         "description":
         "Enter the share link and return the download file response./输入分享链接后返回下载文件响应",
     },
@@ -80,11 +87,7 @@ tags_metadata = [
 api = Scraper()
 
 # 创建FastAPI实例
-app = FastAPI(
-    title=title,
-    description=description,
-    version=version,
-    openapi_tags=tags_metadata)
+app = FastAPI(title=title, description=description, version=version, openapi_tags=tags_metadata)
 
 # 创建Limiter对象
 limiter = Limiter(key_func=get_remote_address)
@@ -191,8 +194,7 @@ async def api_logs(start_time, input_data, endpoint, error_data: dict = None):
 
 
 # Root端点
-@app.get(
-    "/", response_class=ORJSONResponse, response_model=APIRoot, tags=["Root"])
+@app.get("/", response_class=ORJSONResponse, response_model=APIRoot, tags=["Root"])
 async def root():
     """
     Root path info.
@@ -215,11 +217,7 @@ async def root():
 
 # 混合解析端点,自动判断输入链接返回精简后的数据
 # Hybrid parsing endpoint, automatically determine the input link and return the simplified data.
-@app.get(
-    "/api",
-    tags=["API"],
-    response_class=ORJSONResponse,
-    response_model=API_Hybrid_Response)
+@app.get("/api", tags=["API"], response_class=ORJSONResponse, response_model=API_Hybrid_Response)
 @limiter.limit(Rate_Limit)
 async def hybrid_parsing(request: Request, url: str, minimal: bool = False):
     """
@@ -265,8 +263,7 @@ async def hybrid_parsing(request: Request, url: str, minimal: bool = False):
         # 合并数据
         result.update(data)
     # 记录API调用
-    await api_logs(
-        start_time=start_time, input_data={'url': url}, endpoint='api')
+    await api_logs(start_time=start_time, input_data={'url': url}, endpoint='api')
     return ORJSONResponse(result)
 
 
@@ -405,8 +402,7 @@ async def get_douyin_live_video_data(request: Request,
                     "status": "failed",
                     "platform": "douyin",
                     "endpoint": "/douyin_live_video_data/",
-                    "message":
-                    "直播视频API数据获取失败/Failed to get live video API data",
+                    "message": "直播视频API数据获取失败/Failed to get live video API data",
                 }
                 return ORJSONResponse(result)
             # print('获取到的video_data:{}'.format(video_data))
@@ -444,12 +440,8 @@ async def get_douyin_live_video_data(request: Request,
 
 
 @app.get(
-    "/douyin_profile_videos/",
-    response_class=ORJSONResponse,
-    response_model=None,
-    tags=["Douyin"])
-async def get_douyin_user_profile_videos(tikhub_token: str,
-                                         douyin_user_url: str = None):
+    "/douyin_profile_videos/", response_class=ORJSONResponse, response_model=None, tags=["Douyin"])
+async def get_douyin_user_profile_videos(tikhub_token: str, douyin_user_url: str = None):
     """
     ## 用途/Usage
     - 获取抖音用户主页数据，参数是用户链接|ID
@@ -467,8 +459,7 @@ async def get_douyin_user_profile_videos(tikhub_token: str,
     response_class=ORJSONResponse,
     response_model=None,
     tags=["Douyin"])
-async def get_douyin_user_profile_liked_videos(tikhub_token: str,
-                                               douyin_user_url: str = None):
+async def get_douyin_user_profile_liked_videos(tikhub_token: str, douyin_user_url: str = None):
     """
     ## 用途/Usage
     - 获取抖音用户喜欢的视频数据，参数是用户链接|ID
@@ -482,12 +473,8 @@ async def get_douyin_user_profile_liked_videos(tikhub_token: str,
 
 
 @app.get(
-    "/douyin_video_comments/",
-    response_class=ORJSONResponse,
-    response_model=None,
-    tags=["Douyin"])
-async def get_douyin_video_comments(tikhub_token: str,
-                                    douyin_video_url: str = None):
+    "/douyin_video_comments/", response_class=ORJSONResponse, response_model=None, tags=["Douyin"])
+async def get_douyin_video_comments(tikhub_token: str, douyin_video_url: str = None):
     """
     ## 用途/Usage
     - 获取抖音视频评论数据，参数是视频链接|分享口令
@@ -594,12 +581,8 @@ async def get_tiktok_video_data(request: Request,
 
 # 获取TikTok用户视频数据/Get TikTok user video data
 @app.get(
-    "/tiktok_profile_videos/",
-    response_class=ORJSONResponse,
-    response_model=None,
-    tags=["TikTok"])
-async def get_tiktok_profile_videos(tikhub_token: str,
-                                    tiktok_video_url: str = None):
+    "/tiktok_profile_videos/", response_class=ORJSONResponse, response_model=None, tags=["TikTok"])
+async def get_tiktok_profile_videos(tikhub_token: str, tiktok_video_url: str = None):
     """
     ## 用途/Usage
     - 获取抖音用户主页数据，参数是用户链接|ID
@@ -618,8 +601,7 @@ async def get_tiktok_profile_videos(tikhub_token: str,
     response_class=ORJSONResponse,
     response_model=None,
     tags=["TikTok"])
-async def get_tiktok_profile_liked_videos(tikhub_token: str,
-                                          tiktok_video_url: str = None):
+async def get_tiktok_profile_liked_videos(tikhub_token: str, tiktok_video_url: str = None):
     """
     ## 用途/Usage
     - 获取抖音用户主页点赞视频数据，参数是用户链接|ID
@@ -691,49 +673,40 @@ async def download_file_hybrid(request: Request,
         return ORJSONResponse(data)
     else:
         # 记录API调用
-        await api_logs(
-            start_time=start_time,
-            input_data={'url': url},
-            endpoint='download')
+        await api_logs(start_time=start_time, input_data={'url': url}, endpoint='download')
         url_type = data.get('type')
         platform = data.get('platform')
         aweme_id = data.get('aweme_id')
-        file_name_prefix = config["Web_API"][
-            "File_Name_Prefix"] if prefix else ''
+        file_name_prefix = config["Web_API"]["File_Name_Prefix"] if prefix else ''
         root_path = config["Web_API"]["Download_Path"]
         # 查看目录是否存在，不存在就创建
         if not os.path.exists(root_path):
             os.makedirs(root_path)
-        name = data.get('author').get('nickname') + '_' + data.get(
-            'author').get('unique_id')
+        name = data.get('author').get('nickname') + '_' + data.get('author').get('unique_id')
         if url_type == 'video':
             # file_name = file_name_prefix + platform + '_' + aweme_id + '.mp4' if not watermark else file_name_prefix + platform + '_' + aweme_id + '_watermark' + '.mp4'
             file_name = name + '_' + aweme_id + '.mp4' if not watermark else name + '_' + aweme_id + '_watermark' + '.mp4'
-            url = data.get('video_data').get(
-                'nwm_video_url_HQ') if not watermark else data.get(
-                    'video_data').get('wm_video_url_HQ')
+            url = data.get('video_data').get('nwm_video_url_HQ') if not watermark else data.get(
+                'video_data').get('wm_video_url_HQ')
             print('url: ', url)
             file_path = root_path + "/" + file_name
             print('file_path: ', file_path)
             # 判断文件是否存在，存在就直接返回
             if os.path.exists(file_path):
                 print('文件已存在，直接返回')
-                return FileResponse(
-                    path=file_path, media_type='video/mp4', filename=file_name)
+                return FileResponse(path=file_path, media_type='video/mp4', filename=file_name)
             else:
                 if platform == 'douyin':
                     async with aiohttp.ClientSession() as session:
                         async with session.get(
-                                url=url, headers=headers,
-                                allow_redirects=False) as response:
+                                url=url, headers=headers, allow_redirects=False) as response:
                             r = response.headers
                             cdn_url = r.get('location')
                             async with session.get(url=cdn_url) as res:
                                 r = await res.content.read()
                 elif platform == 'tiktok':
                     async with aiohttp.ClientSession() as session:
-                        async with session.get(
-                                url=url, headers=headers) as res:
+                        async with session.get(url=url, headers=headers) as res:
                             r = await res.content.read()
                 with open(file_path, 'wb') as f:
                     f.write(r)
@@ -741,12 +714,11 @@ async def download_file_hybrid(request: Request,
                     clip = mp.AudioFileClip(file_path)
                     clip.write_audiofile(file_path.replace('mp4', 'mp3'))
                     # if os.path.isfile(file_path): os.remove(file_path)
-                return FileResponse(
-                    path=file_path, media_type='video/mp4', filename=file_name)
+                return FileResponse(path=file_path, media_type='video/mp4', filename=file_name)
         elif url_type == 'image':
             url = data.get('image_data').get(
-                'no_watermark_image_list') if not watermark else data.get(
-                    'image_data').get('watermark_image_list')
+                'no_watermark_image_list') if not watermark else data.get('image_data').get(
+                    'watermark_image_list')
             print('url: ', url)
             zip_file_name = file_name_prefix + platform + '_' + aweme_id + '_images.zip' if not watermark else file_name_prefix + platform + '_' + aweme_id + '_images_watermark.zip'
             zip_file_path = root_path + "/" + zip_file_name
@@ -755,10 +727,7 @@ async def download_file_hybrid(request: Request,
             # 判断文件是否存在，存在就直接返回、
             if os.path.exists(zip_file_path):
                 print('文件已存在，直接返回')
-                return FileResponse(
-                    path=zip_file_path,
-                    media_type='zip',
-                    filename=zip_file_name)
+                return FileResponse(path=zip_file_path, media_type='zip', filename=zip_file_name)
             file_path_list = []
             for i in url:
                 async with aiohttp.ClientSession() as session:
@@ -816,9 +785,7 @@ async def batch_download_file(url_list: str, prefix: bool = True):
 
 # 抖音链接格式下载端点(video)/Douyin link format download endpoint(video)
 @app.get("/video/{aweme_id}", tags=["Download"])
-async def download_douyin_video(aweme_id: str,
-                                prefix: bool = True,
-                                watermark: bool = False):
+async def download_douyin_video(aweme_id: str, prefix: bool = True, watermark: bool = False):
     """
     ## 用途/Usage
     ### [中文]
@@ -847,9 +814,7 @@ async def download_douyin_video(aweme_id: str,
 
 # 抖音链接格式下载端点(video)/Douyin link format download endpoint(video)
 @app.get("/note/{aweme_id}", tags=["Download"])
-async def download_douyin_video(aweme_id: str,
-                                prefix: bool = True,
-                                watermark: bool = False):
+async def download_douyin_video(aweme_id: str, prefix: bool = True, watermark: bool = False):
     """
     ## 用途/Usage
     ### [中文]
@@ -878,9 +843,7 @@ async def download_douyin_video(aweme_id: str,
 
 # 抖音链接格式下载端点/Douyin link format download endpoint
 @app.get("/discover", tags=["Download"])
-async def download_douyin_discover(modal_id: str,
-                                   prefix: bool = True,
-                                   watermark: bool = False):
+async def download_douyin_discover(modal_id: str, prefix: bool = True, watermark: bool = False):
     """
     ## 用途/Usage
     ### [中文]
@@ -959,8 +922,7 @@ def cleanup_path():
                     print(e)
         else:
             time_now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-            print(
-                f"{time_now}: The download folder does not exist, skipping...")
+            print(f"{time_now}: The download folder does not exist, skipping...")
         time.sleep(timer)
 
 
@@ -984,9 +946,4 @@ if __name__ == '__main__':
     # 建议使用gunicorn启动，使用uvicorn启动时请将debug设置为False
     # It is recommended to use gunicorn to start, when using uvicorn to start, please set debug to False
     # uvicorn web_api:app --host '0.0.0.0' --port 8000 --reload
-    uvicorn.run(
-        "web_api:app",
-        host='192.168.80.94',
-        port=port,
-        reload=True,
-        access_log=False)
+    uvicorn.run("web_api:app", host='192.168.80.94', port=port, reload=True, access_log=False)

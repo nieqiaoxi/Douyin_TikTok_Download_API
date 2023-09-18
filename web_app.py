@@ -316,7 +316,7 @@ async def main():
                 #                       put_link(t('点击下载', 'Click to download'),
                 #                                f"{config['Web_API']['Domain']}/download?url={url}&prefix=true&watermark=true",
                 #                                new_window=True)])
-                table_list.insert(5, [t('图片打包下载-无水印', 'Download images ZIP-No-Watermark'),
+                table_list.insert(5, [t('图片下载-无水印', 'Download images ZIP-No-Watermark'),
                                       put_link(t('点击下载', 'Click to download'),
                                                f"{config['Web_API']['Domain']}/download?url={url}&prefix=true&watermark=false",
                                                new_window=True)])
