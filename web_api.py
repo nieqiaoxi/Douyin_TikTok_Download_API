@@ -8,7 +8,6 @@
 # 创建一个接受提交参数的FastAPi应用程序。
 # 将scraper.py返回的内容以JSON格式返回。
 
-
 import os
 import time
 import json
@@ -27,7 +26,6 @@ from pydantic import BaseModel
 from starlette.responses import RedirectResponse
 import moviepy.editor as mp
 
-
 from scraper import Scraper
 
 # 读取配置文件
@@ -45,29 +43,7 @@ title = "Douyin TikTok Download/Scraper API-V1"
 version = '3.1.3'
 update_time = "2023/02/19"
 description = """
-#### Description/说明
-<details>
-<summary>点击展开/Click to expand</summary>
-> [中文/Chinese]
-- 爬取Douyin以及TikTok的数据并返回，更多功能正在开发中。
-- 如果需要更多接口，请查看[https://api.tikhub.io/docs](https://api.tikhub.io/docs)。
-- 本项目开源在[GitHub：Douyin_TikTok_Download_API](https://github.com/Evil0ctal/Douyin_TikTok_Download_API)。
-- 全部端点数据均来自抖音以及TikTok的官方接口，如遇到问题或BUG或建议请在[issues](https://github.com/Evil0ctal/Douyin_TikTok_Download_API/issues)中反馈。
-- 本项目仅供学习交流使用，严禁用于违法用途，如有侵权请联系作者。
-> [英文/English]
-- Crawl the data of Douyin and TikTok and return it. More features are under development.
-- If you need more interfaces, please visit [https://api.tikhub.io/docs](https://api.tikhub.io/docs).
-- This project is open source on [GitHub: Douyin_TikTok_Download_API](https://github.com/Evil0ctal/Douyin_TikTok_Download_API).
-- All endpoint data comes from the official interface of Douyin and TikTok. If you have any questions or BUGs or suggestions, please feedback in [issues](
-- This project is for learning and communication only. It is strictly forbidden to be used for illegal purposes. If there is any infringement, please contact the author.
-</details>
-#### Contact author/联系作者
-<details>
-<summary>点击展开/Click to expand</summary>
-- WeChat: Evil0ctal
-- Email: [Evil0ctal1985@gmail.com](mailto:Evil0ctal1985@gmail.com)
-- Github: [https://github.com/Evil0ctal](https://github.com/Evil0ctal)
-</details>
+
 """
 tags_metadata = [
     {
@@ -75,8 +51,10 @@ tags_metadata = [
         "description": "Root path info.",
     },
     {
-        "name": "API",
-        "description": "Hybrid interface, automatically determine the input link and return the simplified data/混合接口，自动判断输入链接返回精简后的数据。",
+        "name":
+        "API",
+        "description":
+        "Hybrid interface, automatically determine the input link and return the simplified data/混合接口，自动判断输入链接返回精简后的数据。",
     },
     {
         "name": "Douyin",
@@ -87,8 +65,10 @@ tags_metadata = [
         "description": "All TikTok API Endpoints/所有TikTok接口节点",
     },
     {
-        "name": "Download",
-        "description": "Enter the share link and return the download file response./输入分享链接后返回下载文件响应",
+        "name":
+        "Download",
+        "description":
+        "Enter the share link and return the download file response./输入分享链接后返回下载文件响应",
     },
     {
         "name": "iOS_Shortcut",
@@ -104,14 +84,12 @@ app = FastAPI(
     title=title,
     description=description,
     version=version,
-    openapi_tags=tags_metadata
-)
+    openapi_tags=tags_metadata)
 
 # 创建Limiter对象
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
 """ ________________________⬇️端点响应模型(Endpoints Response Model)⬇️________________________"""
 
 
@@ -213,7 +191,8 @@ async def api_logs(start_time, input_data, endpoint, error_data: dict = None):
 
 
 # Root端点
-@app.get("/", response_class=ORJSONResponse, response_model=APIRoot, tags=["Root"])
+@app.get(
+    "/", response_class=ORJSONResponse, response_model=APIRoot, tags=["Root"])
 async def root():
     """
     Root path info.
@@ -236,7 +215,11 @@ async def root():
 
 # 混合解析端点,自动判断输入链接返回精简后的数据
 # Hybrid parsing endpoint, automatically determine the input link and return the simplified data.
-@app.get("/api", tags=["API"], response_class=ORJSONResponse, response_model=API_Hybrid_Response)
+@app.get(
+    "/api",
+    tags=["API"],
+    response_class=ORJSONResponse,
+    response_model=API_Hybrid_Response)
 @limiter.limit(Rate_Limit)
 async def hybrid_parsing(request: Request, url: str, minimal: bool = False):
     """
@@ -266,7 +249,9 @@ async def hybrid_parsing(request: Request, url: str, minimal: bool = False):
     # 开始时间
     start_time = time.time()
     # 获取数据
+    print('**********************')
     data = await api.hybrid_parsing(url)
+    print('hybrid_parsing', data)
     # 是否精简
     if minimal:
         result = api.hybrid_parsing_minimal(data)
@@ -280,21 +265,24 @@ async def hybrid_parsing(request: Request, url: str, minimal: bool = False):
         # 合并数据
         result.update(data)
     # 记录API调用
-    await api_logs(start_time=start_time,
-                   input_data={'url': url},
-                   endpoint='api')
+    await api_logs(
+        start_time=start_time, input_data={'url': url}, endpoint='api')
     return ORJSONResponse(result)
 
 
 """ ________________________⬇️抖音视频解析端点(Douyin video parsing endpoint)⬇️________________________"""
 
 
-
-
 # 获取抖音单个视频数据/Get Douyin single video data
-@app.get("/douyin_video_data/", response_class=ORJSONResponse, response_model=API_Video_Response, tags=["Douyin"])
+@app.get(
+    "/douyin_video_data/",
+    response_class=ORJSONResponse,
+    response_model=API_Video_Response,
+    tags=["Douyin"])
 @limiter.limit(Rate_Limit)
-async def get_douyin_video_data(request: Request, douyin_video_url: str = None, video_id: str = None):
+async def get_douyin_video_data(request: Request,
+                                douyin_video_url: str = None,
+                                video_id: str = None):
     """
     ## 用途/Usage
     - 获取抖音用户单个视频数据，参数是视频链接|分享口令
@@ -349,9 +337,13 @@ async def get_douyin_video_data(request: Request, douyin_video_url: str = None, 
                 return ORJSONResponse(result)
             # print('获取到的video_data:{}'.format(video_data))
             # 记录API调用
-            await api_logs(start_time=start_time,
-                           input_data={'douyin_video_url': douyin_video_url, 'video_id': video_id},
-                           endpoint='douyin_video_data')
+            await api_logs(
+                start_time=start_time,
+                input_data={
+                    'douyin_video_url': douyin_video_url,
+                    'video_id': video_id
+                },
+                endpoint='douyin_video_data')
             # 结束时间
             total_time = float(format(time.time() - start_time, '.4f'))
             # 返回数据
@@ -377,9 +369,15 @@ async def get_douyin_video_data(request: Request, douyin_video_url: str = None, 
             return ORJSONResponse(result)
 
 
-@app.get("/douyin_live_video_data/", response_class=ORJSONResponse, response_model=API_Video_Response, tags=["Douyin"])
+@app.get(
+    "/douyin_live_video_data/",
+    response_class=ORJSONResponse,
+    response_model=API_Video_Response,
+    tags=["Douyin"])
 @limiter.limit(Rate_Limit)
-async def get_douyin_live_video_data(request: Request, douyin_live_video_url: str = None, web_rid: str = None):
+async def get_douyin_live_video_data(request: Request,
+                                     douyin_live_video_url: str = None,
+                                     web_rid: str = None):
     """
     ## 用途/Usage
     - 获取抖音直播视频数据，参数是视频链接|分享口令
@@ -407,14 +405,19 @@ async def get_douyin_live_video_data(request: Request, douyin_live_video_url: st
                     "status": "failed",
                     "platform": "douyin",
                     "endpoint": "/douyin_live_video_data/",
-                    "message": "直播视频API数据获取失败/Failed to get live video API data",
+                    "message":
+                    "直播视频API数据获取失败/Failed to get live video API data",
                 }
                 return ORJSONResponse(result)
             # print('获取到的video_data:{}'.format(video_data))
             # 记录API调用
-            await api_logs(start_time=start_time,
-                           input_data={'douyin_video_url': douyin_live_video_url, 'web_rid': web_rid},
-                           endpoint='douyin_live_video_data')
+            await api_logs(
+                start_time=start_time,
+                input_data={
+                    'douyin_video_url': douyin_live_video_url,
+                    'web_rid': web_rid
+                },
+                endpoint='douyin_live_video_data')
             # 结束时间
             total_time = float(format(time.time() - start_time, '.4f'))
             # 返回数据
@@ -440,8 +443,13 @@ async def get_douyin_live_video_data(request: Request, douyin_live_video_url: st
             return ORJSONResponse(result)
 
 
-@app.get("/douyin_profile_videos/", response_class=ORJSONResponse, response_model=None, tags=["Douyin"])
-async def get_douyin_user_profile_videos(tikhub_token: str, douyin_user_url: str = None):
+@app.get(
+    "/douyin_profile_videos/",
+    response_class=ORJSONResponse,
+    response_model=None,
+    tags=["Douyin"])
+async def get_douyin_user_profile_videos(tikhub_token: str,
+                                         douyin_user_url: str = None):
     """
     ## 用途/Usage
     - 获取抖音用户主页数据，参数是用户链接|ID
@@ -449,12 +457,18 @@ async def get_douyin_user_profile_videos(tikhub_token: str, douyin_user_url: str
     ## 参数/Parameter
     tikhub_token: https://api.tikhub.io/#/Authorization/login_for_access_token_user_login_post
     """
-    response = await api.get_douyin_user_profile_videos(tikhub_token=tikhub_token, profile_url=douyin_user_url)
+    response = await api.get_douyin_user_profile_videos(
+        tikhub_token=tikhub_token, profile_url=douyin_user_url)
     return response
 
 
-@app.get("/douyin_profile_liked_videos/", response_class=ORJSONResponse, response_model=None, tags=["Douyin"])
-async def get_douyin_user_profile_liked_videos(tikhub_token: str, douyin_user_url: str = None):
+@app.get(
+    "/douyin_profile_liked_videos/",
+    response_class=ORJSONResponse,
+    response_model=None,
+    tags=["Douyin"])
+async def get_douyin_user_profile_liked_videos(tikhub_token: str,
+                                               douyin_user_url: str = None):
     """
     ## 用途/Usage
     - 获取抖音用户喜欢的视频数据，参数是用户链接|ID
@@ -462,12 +476,18 @@ async def get_douyin_user_profile_liked_videos(tikhub_token: str, douyin_user_ur
     ## 参数/Parameter
     tikhub_token: https://api.tikhub.io/#/Authorization/login_for_access_token_user_login_post
     """
-    response = await api.get_douyin_profile_liked_data(tikhub_token=tikhub_token, profile_url=douyin_user_url)
+    response = await api.get_douyin_profile_liked_data(
+        tikhub_token=tikhub_token, profile_url=douyin_user_url)
     return response
 
 
-@app.get("/douyin_video_comments/", response_class=ORJSONResponse, response_model=None, tags=["Douyin"])
-async def get_douyin_video_comments(tikhub_token: str, douyin_video_url: str = None):
+@app.get(
+    "/douyin_video_comments/",
+    response_class=ORJSONResponse,
+    response_model=None,
+    tags=["Douyin"])
+async def get_douyin_video_comments(tikhub_token: str,
+                                    douyin_video_url: str = None):
     """
     ## 用途/Usage
     - 获取抖音视频评论数据，参数是视频链接|分享口令
@@ -475,7 +495,8 @@ async def get_douyin_video_comments(tikhub_token: str, douyin_video_url: str = N
     ## 参数/Parameter
     tikhub_token: https://api.tikhub.io/#/Authorization/login_for_access_token_user_login_post
     """
-    response = await api.get_douyin_video_comments(tikhub_token=tikhub_token, video_url=douyin_video_url)
+    response = await api.get_douyin_video_comments(
+        tikhub_token=tikhub_token, video_url=douyin_video_url)
     return response
 
 
@@ -483,9 +504,15 @@ async def get_douyin_video_comments(tikhub_token: str, douyin_video_url: str = N
 
 
 # 获取TikTok单个视频数据/Get TikTok single video data
-@app.get("/tiktok_video_data/", response_class=ORJSONResponse, response_model=API_Video_Response, tags=["TikTok"])
+@app.get(
+    "/tiktok_video_data/",
+    response_class=ORJSONResponse,
+    response_model=API_Video_Response,
+    tags=["TikTok"])
 @limiter.limit(Rate_Limit)
-async def get_tiktok_video_data(request: Request, tiktok_video_url: str = None, video_id: str = None):
+async def get_tiktok_video_data(request: Request,
+                                tiktok_video_url: str = None,
+                                video_id: str = None):
     """
         ## 用途/Usage
         - 获取单个视频数据，参数是视频链接| 分享口令。
@@ -514,8 +541,12 @@ async def get_tiktok_video_data(request: Request, tiktok_video_url: str = None, 
     if video_id is None or video_id == "":
         video_id = await api.get_tiktok_video_id(tiktok_video_url)
         if video_id is None:
-            return ORJSONResponse({"status": "fail", "platform": "tiktok", "endpoint": "/tiktok_video_data/",
-                                   "message": "获取视频ID失败/Get video ID failed"})
+            return ORJSONResponse({
+                "status": "fail",
+                "platform": "tiktok",
+                "endpoint": "/tiktok_video_data/",
+                "message": "获取视频ID失败/Get video ID failed"
+            })
     if video_id is not None and video_id != '':
         print('开始解析单个TikTok视频数据')
         video_data = await api.get_tiktok_video_data(video_id)
@@ -531,9 +562,13 @@ async def get_tiktok_video_data(request: Request, tiktok_video_url: str = None, 
             }
             return ORJSONResponse(result)
         # 记录API调用
-        await api_logs(start_time=start_time,
-                       input_data={'tiktok_video_url': tiktok_video_url, 'video_id': video_id},
-                       endpoint='tiktok_video_data')
+        await api_logs(
+            start_time=start_time,
+            input_data={
+                'tiktok_video_url': tiktok_video_url,
+                'video_id': video_id
+            },
+            endpoint='tiktok_video_data')
         # 结束时间
         total_time = float(format(time.time() - start_time, '.4f'))
         # 返回数据
@@ -558,8 +593,13 @@ async def get_tiktok_video_data(request: Request, tiktok_video_url: str = None, 
 
 
 # 获取TikTok用户视频数据/Get TikTok user video data
-@app.get("/tiktok_profile_videos/", response_class=ORJSONResponse, response_model=None, tags=["TikTok"])
-async def get_tiktok_profile_videos(tikhub_token: str, tiktok_video_url: str = None):
+@app.get(
+    "/tiktok_profile_videos/",
+    response_class=ORJSONResponse,
+    response_model=None,
+    tags=["TikTok"])
+async def get_tiktok_profile_videos(tikhub_token: str,
+                                    tiktok_video_url: str = None):
     """
     ## 用途/Usage
     - 获取抖音用户主页数据，参数是用户链接|ID
@@ -567,13 +607,19 @@ async def get_tiktok_profile_videos(tikhub_token: str, tiktok_video_url: str = N
     ## 参数/Parameter
     tikhub_token: https://api.tikhub.io/#/Authorization/login_for_access_token_user_login_post
     """
-    response = await api.get_tiktok_user_profile_videos(tikhub_token=tikhub_token, tiktok_video_url=tiktok_video_url)
+    response = await api.get_tiktok_user_profile_videos(
+        tikhub_token=tikhub_token, tiktok_video_url=tiktok_video_url)
     return response
 
 
 # 获取TikTok用户主页点赞视频数据/Get TikTok user profile liked video data
-@app.get("/tiktok_profile_liked_videos/", response_class=ORJSONResponse, response_model=None, tags=["TikTok"])
-async def get_tiktok_profile_liked_videos(tikhub_token: str, tiktok_video_url: str = None):
+@app.get(
+    "/tiktok_profile_liked_videos/",
+    response_class=ORJSONResponse,
+    response_model=None,
+    tags=["TikTok"])
+async def get_tiktok_profile_liked_videos(tikhub_token: str,
+                                          tiktok_video_url: str = None):
     """
     ## 用途/Usage
     - 获取抖音用户主页点赞视频数据，参数是用户链接|ID
@@ -581,7 +627,8 @@ async def get_tiktok_profile_liked_videos(tikhub_token: str, tiktok_video_url: s
     ## 参数/Parameter
     tikhub_token: https://api.tikhub.io/#/Authorization/login_for_access_token_user_login_post
     """
-    response = await api.get_tiktok_user_profile_liked_videos(tikhub_token=tikhub_token, tiktok_video_url=tiktok_video_url)
+    response = await api.get_tiktok_user_profile_liked_videos(
+        tikhub_token=tikhub_token, tiktok_video_url=tiktok_video_url)
     return response
 
 
@@ -604,12 +651,14 @@ async def Get_Shortcut():
 """ ________________________⬇️下载文件端点/函数(Download file endpoints/functions)⬇️________________________"""
 
 
-
-
 # 下载文件端点/Download file endpoint
 @app.get("/download", tags=["Download"])
 @limiter.limit(Rate_Limit)
-async def download_file_hybrid(request: Request, url: str, prefix: bool = True, watermark: bool = False,audio: bool=False):
+async def download_file_hybrid(request: Request,
+                               url: str,
+                               prefix: bool = True,
+                               watermark: bool = False,
+                               audio: bool = False):
     """
         ## 用途/Usage
         ### [中文]
@@ -623,64 +672,81 @@ async def download_file_hybrid(request: Request, url: str, prefix: bool = True, 
         """
     # 是否开启此端点/Whether to enable this endpoint
     if config["Web_API"]["Download_Switch"] != "True":
-        return ORJSONResponse({"status": "endpoint closed",
-                               "message": "此端点已关闭请在配置文件中开启/This endpoint is closed, please enable it in the configuration file"})
+        return ORJSONResponse({
+            "status":
+            "endpoint closed",
+            "message":
+            "此端点已关闭请在配置文件中开启/This endpoint is closed, please enable it in the configuration file"
+        })
     # 开始时间
     start_time = time.time()
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
     data = await api.hybrid_parsing(url)
+
+    print(api)
     if data is None:
         return ORJSONResponse(data)
     else:
         # 记录API调用
-        await api_logs(start_time=start_time,
-                       input_data={'url': url},
-                       endpoint='download')
+        await api_logs(
+            start_time=start_time,
+            input_data={'url': url},
+            endpoint='download')
         url_type = data.get('type')
         platform = data.get('platform')
         aweme_id = data.get('aweme_id')
-        file_name_prefix = config["Web_API"]["File_Name_Prefix"] if prefix else ''
+        file_name_prefix = config["Web_API"][
+            "File_Name_Prefix"] if prefix else ''
         root_path = config["Web_API"]["Download_Path"]
         # 查看目录是否存在，不存在就创建
         if not os.path.exists(root_path):
             os.makedirs(root_path)
-        name=  data.get('author').get('nickname') + '_' + data.get('author').get('unique_id')
+        name = data.get('author').get('nickname') + '_' + data.get(
+            'author').get('unique_id')
         if url_type == 'video':
             # file_name = file_name_prefix + platform + '_' + aweme_id + '.mp4' if not watermark else file_name_prefix + platform + '_' + aweme_id + '_watermark' + '.mp4'
             file_name = name + '_' + aweme_id + '.mp4' if not watermark else name + '_' + aweme_id + '_watermark' + '.mp4'
-            url = data.get('video_data').get('nwm_video_url_HQ') if not watermark else data.get('video_data').get(
-                'wm_video_url_HQ')
+            url = data.get('video_data').get(
+                'nwm_video_url_HQ') if not watermark else data.get(
+                    'video_data').get('wm_video_url_HQ')
             print('url: ', url)
             file_path = root_path + "/" + file_name
             print('file_path: ', file_path)
             # 判断文件是否存在，存在就直接返回
             if os.path.exists(file_path):
                 print('文件已存在，直接返回')
-                return FileResponse(path=file_path, media_type='video/mp4', filename=file_name)
+                return FileResponse(
+                    path=file_path, media_type='video/mp4', filename=file_name)
             else:
                 if platform == 'douyin':
                     async with aiohttp.ClientSession() as session:
-                        async with session.get(url=url, headers=headers, allow_redirects=False) as response:
+                        async with session.get(
+                                url=url, headers=headers,
+                                allow_redirects=False) as response:
                             r = response.headers
                             cdn_url = r.get('location')
                             async with session.get(url=cdn_url) as res:
                                 r = await res.content.read()
                 elif platform == 'tiktok':
                     async with aiohttp.ClientSession() as session:
-                        async with session.get(url=url, headers=headers) as res:
+                        async with session.get(
+                                url=url, headers=headers) as res:
                             r = await res.content.read()
                 with open(file_path, 'wb') as f:
                     f.write(r)
                 if audio:  # 转音频
-                  clip = mp.AudioFileClip(file_path) 
-                  clip.write_audiofile(file_path.replace('mp4','mp3'))
-                  # if os.path.isfile(file_path): os.remove(file_path)
-                return FileResponse(path=file_path, media_type='video/mp4', filename=file_name)
+                    clip = mp.AudioFileClip(file_path)
+                    clip.write_audiofile(file_path.replace('mp4', 'mp3'))
+                    # if os.path.isfile(file_path): os.remove(file_path)
+                return FileResponse(
+                    path=file_path, media_type='video/mp4', filename=file_name)
         elif url_type == 'image':
-            url = data.get('image_data').get('no_watermark_image_list') if not watermark else data.get(
-                'image_data').get('watermark_image_list')
+            url = data.get('image_data').get(
+                'no_watermark_image_list') if not watermark else data.get(
+                    'image_data').get('watermark_image_list')
             print('url: ', url)
             zip_file_name = file_name_prefix + platform + '_' + aweme_id + '_images.zip' if not watermark else file_name_prefix + platform + '_' + aweme_id + '_images_watermark.zip'
             zip_file_path = root_path + "/" + zip_file_name
@@ -689,7 +755,10 @@ async def download_file_hybrid(request: Request, url: str, prefix: bool = True, 
             # 判断文件是否存在，存在就直接返回、
             if os.path.exists(zip_file_path):
                 print('文件已存在，直接返回')
-                return FileResponse(path=zip_file_path, media_type='zip', filename=zip_file_name)
+                return FileResponse(
+                    path=zip_file_path,
+                    media_type='zip',
+                    filename=zip_file_name)
             file_path_list = []
             for i in url:
                 async with aiohttp.ClientSession() as session:
@@ -698,7 +767,7 @@ async def download_file_hybrid(request: Request, url: str, prefix: bool = True, 
                         file_format = content_type.split('/')[1]
                         r = await res.content.read()
                 index = int(url.index(i))
-                if res.status != 200 : continue
+                if res.status != 200: continue
                 # file_name = file_name_prefix + platform + '_' + aweme_id + '_' + str(
                 #     index + 1) + '.' + file_format if not watermark else \
                 #     file_name_prefix + platform + '_' + aweme_id + '_' + str(
@@ -708,23 +777,25 @@ async def download_file_hybrid(request: Request, url: str, prefix: bool = True, 
                     name + '_' + aweme_id + '_' + str(
                         index + 1) + '_watermark' + '.' + file_format
                 file_path = root_path + "/" + file_name
-                if os.path.exists(file_path): print(file_path.split('/')[2],'已存在'); continue
+                if os.path.exists(file_path):
+                    print(file_path.split('/')[2], '已存在')
+                    continue
                 file_path_list.append(file_path)
                 # print('file_path: ', file_path)
-                with open(file_path, 'wb') as f: f.write(r) ,print('success: ', file_path.split('/')[2])
-            
-                # if len(url) == len(file_path_list):                   
-                    # zip_file = zipfile.ZipFile(zip_file_path, 'w')
-                    # for f in file_path_list:
-                    #     zip_file.write(os.path.join(f), f, zipfile.ZIP_DEFLATED)
-                    # zip_file.close()
-                    # return FileResponse(path=zip_file_path, media_type='zip', filename=zip_file_name)
-            # if len(url) != len(file_path_list): 
+                with open(file_path, 'wb') as f:
+                    f.write(r), print('success: ', file_path.split('/')[2])
+
+                # if len(url) == len(file_path_list):
+                # zip_file = zipfile.ZipFile(zip_file_path, 'w')
+                # for f in file_path_list:
+                #     zip_file.write(os.path.join(f), f, zipfile.ZIP_DEFLATED)
+                # zip_file.close()
+                # return FileResponse(path=zip_file_path, media_type='zip', filename=zip_file_name)
+            # if len(url) != len(file_path_list):
             #       print('download_file_hybrid()')
             #       await download_file_hybrid(url)
         else:
             return ORJSONResponse(data)
-
 
 
 # 批量下载文件端点/Batch download file endpoint
@@ -735,13 +806,19 @@ async def batch_download_file(url_list: str, prefix: bool = True):
     未完工/Unfinished
     """
     print('url_list: ', url_list)
-    return ORJSONResponse({"status": "failed",
-                           "message": "嘿嘿嘿，这个功能还没做呢，等我有空再做吧/Hehehe, this function hasn't been done yet, I'll do it when I have time"})
+    return ORJSONResponse({
+        "status":
+        "failed",
+        "message":
+        "嘿嘿嘿，这个功能还没做呢，等我有空再做吧/Hehehe, this function hasn't been done yet, I'll do it when I have time"
+    })
 
 
 # 抖音链接格式下载端点(video)/Douyin link format download endpoint(video)
 @app.get("/video/{aweme_id}", tags=["Download"])
-async def download_douyin_video(aweme_id: str, prefix: bool = True, watermark: bool = False):
+async def download_douyin_video(aweme_id: str,
+                                prefix: bool = True,
+                                watermark: bool = False):
     """
     ## 用途/Usage
     ### [中文]
@@ -757,8 +834,12 @@ async def download_douyin_video(aweme_id: str, prefix: bool = True, watermark: b
     """
     # 是否开启此端点/Whether to enable this endpoint
     if config["Web_API"]["Download_Switch"] != "True":
-        return ORJSONResponse({"status": "endpoint closed",
-                               "message": "此端点已关闭请在配置文件中开启/This endpoint is closed, please enable it in the configuration file"})
+        return ORJSONResponse({
+            "status":
+            "endpoint closed",
+            "message":
+            "此端点已关闭请在配置文件中开启/This endpoint is closed, please enable it in the configuration file"
+        })
     video_url = f"https://www.douyin.com/video/{aweme_id}"
     download_url = f"{domain}/download?url={video_url}&prefix={prefix}&watermark={watermark}"
     return RedirectResponse(download_url)
@@ -766,7 +847,9 @@ async def download_douyin_video(aweme_id: str, prefix: bool = True, watermark: b
 
 # 抖音链接格式下载端点(video)/Douyin link format download endpoint(video)
 @app.get("/note/{aweme_id}", tags=["Download"])
-async def download_douyin_video(aweme_id: str, prefix: bool = True, watermark: bool = False):
+async def download_douyin_video(aweme_id: str,
+                                prefix: bool = True,
+                                watermark: bool = False):
     """
     ## 用途/Usage
     ### [中文]
@@ -782,8 +865,12 @@ async def download_douyin_video(aweme_id: str, prefix: bool = True, watermark: b
     """
     # 是否开启此端点/Whether to enable this endpoint
     if config["Web_API"]["Download_Switch"] != "True":
-        return ORJSONResponse({"status": "endpoint closed",
-                               "message": "此端点已关闭请在配置文件中开启/This endpoint is closed, please enable it in the configuration file"})
+        return ORJSONResponse({
+            "status":
+            "endpoint closed",
+            "message":
+            "此端点已关闭请在配置文件中开启/This endpoint is closed, please enable it in the configuration file"
+        })
     video_url = f"https://www.douyin.com/video/{aweme_id}"
     download_url = f"{domain}/download?url={video_url}&prefix={prefix}&watermark={watermark}"
     return RedirectResponse(download_url)
@@ -791,7 +878,9 @@ async def download_douyin_video(aweme_id: str, prefix: bool = True, watermark: b
 
 # 抖音链接格式下载端点/Douyin link format download endpoint
 @app.get("/discover", tags=["Download"])
-async def download_douyin_discover(modal_id: str, prefix: bool = True, watermark: bool = False):
+async def download_douyin_discover(modal_id: str,
+                                   prefix: bool = True,
+                                   watermark: bool = False):
     """
     ## 用途/Usage
     ### [中文]
@@ -807,8 +896,12 @@ async def download_douyin_discover(modal_id: str, prefix: bool = True, watermark
     """
     # 是否开启此端点/Whether to enable this endpoint
     if config["Web_API"]["Download_Switch"] != "True":
-        return ORJSONResponse({"status": "endpoint closed",
-                               "message": "此端点已关闭请在配置文件中开启/This endpoint is closed, please enable it in the configuration file"})
+        return ORJSONResponse({
+            "status":
+            "endpoint closed",
+            "message":
+            "此端点已关闭请在配置文件中开启/This endpoint is closed, please enable it in the configuration file"
+        })
     video_url = f"https://www.douyin.com/discover?modal_id={modal_id}"
     download_url = f"{domain}/download?url={video_url}&prefix={prefix}&watermark={watermark}"
     return RedirectResponse(download_url)
@@ -816,7 +909,10 @@ async def download_douyin_discover(modal_id: str, prefix: bool = True, watermark
 
 # Tiktok链接格式下载端点(video)/Tiktok link format download endpoint(video)
 @app.get("/{user_id}/video/{aweme_id}", tags=["Download"])
-async def download_tiktok_video(user_id: str, aweme_id: str, prefix: bool = True, watermark: bool = False):
+async def download_tiktok_video(user_id: str,
+                                aweme_id: str,
+                                prefix: bool = True,
+                                watermark: bool = False):
     """
         ## 用途/Usage
         ### [中文]
@@ -833,8 +929,12 @@ async def download_tiktok_video(user_id: str, aweme_id: str, prefix: bool = True
         """
     # 是否开启此端点/Whether to enable this endpoint
     if config["Web_API"]["Download_Switch"] != "True":
-        return ORJSONResponse({"status": "endpoint closed",
-                               "message": "此端点已关闭请在配置文件中开启/This endpoint is closed, please enable it in the configuration file"})
+        return ORJSONResponse({
+            "status":
+            "endpoint closed",
+            "message":
+            "此端点已关闭请在配置文件中开启/This endpoint is closed, please enable it in the configuration file"
+        })
     video_url = f"https://www.tiktok.com/{user_id}/video/{aweme_id}"
     download_url = f"{domain}/download?url={video_url}&prefix={prefix}&watermark={watermark}"
     return RedirectResponse(download_url)
@@ -859,7 +959,8 @@ def cleanup_path():
                     print(e)
         else:
             time_now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-            print(f"{time_now}: The download folder does not exist, skipping...")
+            print(
+                f"{time_now}: The download folder does not exist, skipping...")
         time.sleep(timer)
 
 
@@ -871,7 +972,8 @@ def cleanup_path():
 async def startup_event():
     # 创建一个清理下载目录定时器线程并启动
     # Create a timer thread to clean up the download directory and start it
-    download_path_clean_switches = True if config["Web_API"]["Download_Path_Clean_Switch"] == "True" else False
+    download_path_clean_switches = True if config["Web_API"][
+        "Download_Path_Clean_Switch"] == "True" else False
     # if download_path_clean_switches:
     #     # 启动清理线程/Start cleaning thread
     #     thread_1 = threading.Thread(target=cleanup_path)
@@ -882,4 +984,9 @@ if __name__ == '__main__':
     # 建议使用gunicorn启动，使用uvicorn启动时请将debug设置为False
     # It is recommended to use gunicorn to start, when using uvicorn to start, please set debug to False
     # uvicorn web_api:app --host '0.0.0.0' --port 8000 --reload
-    uvicorn.run("web_api:app", host='0.0.0.0', port=port, reload=True, access_log=False)
+    uvicorn.run(
+        "web_api:app",
+        host='192.168.80.94',
+        port=port,
+        reload=True,
+        access_log=False)

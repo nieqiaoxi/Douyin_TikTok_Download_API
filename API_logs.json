@@ -35,3 +35,5 @@
 {"time": "2023-06-01 14:35:58", "endpoint": "/download/", "total_time": 0.58, "input_data": {"url": "https://v.douyin.com/U9o4gKu/"}, "error_data": "No error"},
 {"time": "2023-06-01 14:37:00", "endpoint": "/download/", "total_time": 0.4805, "input_data": {"url": "https://v.douyin.com/U9o4gKu/"}, "error_data": "No error"},
 {"time": "2023-06-01 14:37:55", "endpoint": "/download/", "total_time": 0.4794, "input_data": {"url": "https://v.douyin.com/U9o4gKu/"}, "error_data": "No error"},
+{"time": "2023-06-08 11:20:57", "endpoint": "/download/", "total_time": 0.6399, "input_data": {"url": "https://v.douyin.com/UgynMvD/"}, "error_data": "No error"},
+{"time": "2023-06-08 11:21:34", "endpoint": "/api/", "total_time": 0.4909, "input_data": {"url": "https://v.douyin.com/UgynMvD/"}, "error_data": "No error"},
