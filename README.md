@@ -11,7 +11,7 @@
 
 [English](./README.en.md) | [简体中文](./README.md)
 
-🚀「Douyin_TikTok_Download_API」是一个开箱即用的高性能异步[抖音](https://www.douyin.com)|[TikTok](https://www.tiktok.com)数据爬取工具，支持 API 调用，在线批量解析及下载。
+🚀「Douyin_TikTok_Download_API」是一个开箱即用的高性能异步[抖音](https://www.douyin.com)|[TikTok](https://www.tiktok.com)|[Bilibili](https://www.bilibili.com)数据爬取工具，支持API调用，在线批量解析及下载。
 
 [![GitHub license](https://img.shields.io/github/license/Evil0ctal/Douyin_TikTok_Download_API?style=flat-square)](LICENSE)
 [![Release Version](https://img.shields.io/github/v/release/Evil0ctal/Douyin_TikTok_Download_API?style=flat-square)](https://github.com/Evil0ctal/Douyin_TikTok_Download_API/releases/latest)
@@ -35,11 +35,14 @@
 
 </div>
 
-## 👻 介绍
+## 🔊 本项目计划在V4.0.0版本进行重构。
+感兴趣的给请加微信`Evil0ctal`备注github项目重构，目前需要有爬虫/后端/全栈开发，如果你不具备相关技术栈也可以进来，主要是想着拉一个群然后大家可以在群里互相交流学习，不允许发广告以及违法的东西，纯粹交朋友和技术交流。
+
+## 👻介绍
 
 > 🚨 如需使用私有服务器运行本项目，请参考部署方式[[Docker 部署](./README.md#%E9%83%A8%E7%BD%B2%E6%96%B9%E5%BC%8F%E4%BA%8C-docker), [一键部署](./README.md#%E9%83%A8%E7%BD%B2%E6%96%B9%E5%BC%8F%E4%B8%80-linux)]
 
-本项目是基于 [PyWebIO](https://github.com/pywebio/PyWebIO)，[FastAPI](https://fastapi.tiangolo.com/)，[AIOHTTP](https://docs.aiohttp.org/)，快速异步的[抖音](https://www.douyin.com/)/[TikTok](https://www.tiktok.com/)数据爬取工具，并通过 Web 端实现在线批量解析以及下载无水印视频或图集，数据爬取 API，iOS 快捷指令无水印下载等功能。你可以自己部署或改造本项目实现更多功能，也可以在你的项目中直接调用[scraper.py](https://github.com/Evil0ctal/Douyin_TikTok_Download_API/blob/Stable/scraper.py)或安装现有的[pip 包](https://pypi.org/project/douyin-tiktok-scraper/)作为解析库轻松爬取数据等.....
+本项目是基于 [PyWebIO](https://github.com/pywebio/PyWebIO)，[FastAPI](https://fastapi.tiangolo.com/)，[AIOHTTP](https://docs.aiohttp.org/)，快速异步的[抖音](https://www.douyin.com/)/[TikTok](https://www.tiktok.com/)/[Bilibili](https://www.bilibili.com)数据爬取工具，并通过Web端实现在线批量解析以及下载无水印视频或图集，数据爬取API，iOS快捷指令无水印下载等功能。你可以自己部署或改造本项目实现更多功能，也可以在你的项目中直接调用[scraper.py](https://github.com/Evil0ctal/Douyin_TikTok_Download_API/blob/Stable/scraper.py)或安装现有的[pip包](https://pypi.org/project/douyin-tiktok-scraper/)作为解析库轻松爬取数据等.....
 
 _一些简单的运用场景：_
 
@@ -105,11 +108,14 @@ _下载禁止下载的视频，进行数据分析，iOS 无水印下载（搭配
 ## ✨ 功能：
 
 - 抖音（抖音海外版: TikTok）视频/图片解析
-- 网页端批量解析(支持抖音/TikTok 混合提交)
-- 网页端解析结果页批量下载无水印视频(V3.X 以上版本移除，请自行部署 V2.X 版本)
-- API 调用获取链接数据
-- 制作[pip 包](https://pypi.org/project/douyin-tiktok-scraper/)方便快速导入你的项目
-- [iOS 快捷指令快速调用 API](https://apps.apple.com/cn/app/%E5%BF%AB%E6%8D%B7%E6%8C%87%E4%BB%A4/id915249334)实现应用内下载无水印视频/图集
+- Bilibili视频解析
+- 西瓜视频解析
+- 快手视频解析
+- 网页端批量解析(支持抖音/TikTok混合提交)
+- 网页端解析结果页批量下载无水印视频(V3.X以上版本移除，请自行部署V2.X版本)
+- API调用获取链接数据
+- 制作[pip包](https://pypi.org/project/douyin-tiktok-scraper/)方便快速导入你的项目
+- [iOS快捷指令快速调用API](https://apps.apple.com/cn/app/%E5%BF%AB%E6%8D%B7%E6%8C%87%E4%BB%A4/id915249334)实现应用内下载无水印视频/图集
 - 解析作者主页内所有视频([TikHub-API](https://api.tikhub.io/docs) 支持抖音/TikTok)
 - 解析视频内所有评论信息([TikHub-API](https://api.tikhub.io/docs) 支持抖音/TikTok)
 
@@ -143,12 +149,32 @@ async def hybrid_parsing(url: str) -> dict:
     print(f"The hybrid parsing result:\n {result}")
     return result
 
-asyncio.run(hybrid_parsing(url=input("Paste Douyin/TikTok share URL here: ")))
+asyncio.run(hybrid_parsing(url=input("Paste Douyin/TikTok/Bilibili share URL here: ")))
 ```
 
 ## 🗺️ 支持的提交格式：
 
-> 💡 提示：包含但不仅限于以下例子，如果遇到链接解析失败请开启一个新 [issue](https://github.com/Evil0ctal/Douyin_TikTok_Download_API/issues)
+> 💡提示：包含但不仅限于以下例子，如果遇到链接解析失败请开启一个新 [issue](https://github.com/Evil0ctal/Douyin_TikTok_Download_API/issues)
+
+- 快手视频链接
+
+```text
+https://www.kuaishou.com/short-video/3xiqjrezhqjyzxw/
+https://v.kuaishou.com/75kDOJ/
+```
+
+- 西瓜视频链接
+
+```text
+https://www.ixigua.com/7270448082586698281/
+https://m.ixigua.com/video/7274710134306112054/
+```
+
+- Bilibili视频链接
+
+```text
+https://www.bilibili.com/video/BV1Th411x7ii/
+```
 
 - 抖音分享口令 (APP 内复制)
 
