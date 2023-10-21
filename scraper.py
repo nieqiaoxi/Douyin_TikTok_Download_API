@@ -661,6 +661,7 @@ class Scraper:
 
     # 判断链接平台/Judge link platform
     async def judge_url_platform(self, video_url: str) -> str:
+        print('video_url',video_url)
         if 'douyin' in video_url:
             url_platform = 'douyin'
         elif 'bilibili' in video_url or 'b23.tv' in video_url:

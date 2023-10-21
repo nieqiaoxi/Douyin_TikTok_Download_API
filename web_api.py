@@ -1,8 +1,8 @@
 '''
 Author: dengfusheng 
 Date: 2023-06-01 14:01:04
-LastEditTime: 2023-09-18 18:14:54
-LastEditors: dengfusheng@hqshuke.com
+LastEditTime: 2023-10-20 22:05:38
+LastEditors: 2556844982@qq.com
 FilePath: \Douyin_TikTok_Download_API\web_api.py
 Description: 
 '''
@@ -673,7 +673,7 @@ async def download_file_hybrid(request: Request,
         return ORJSONResponse(data)
     else:
         # 记录API调用
-        await api_logs(start_time=start_time, input_data={'url': url}, endpoint='download')
+        await api_logs(start_time=start_time, input_data={'url': url,'info':name}, endpoint='download')
         url_type = data.get('type')
         platform = data.get('platform')
         aweme_id = data.get('aweme_id')
@@ -946,4 +946,4 @@ if __name__ == '__main__':
     # 建议使用gunicorn启动，使用uvicorn启动时请将debug设置为False
     # It is recommended to use gunicorn to start, when using uvicorn to start, please set debug to False
     # uvicorn web_api:app --host '0.0.0.0' --port 8000 --reload
-    uvicorn.run("web_api:app", host='192.168.80.94', port=port, reload=True, access_log=False)
+    uvicorn.run("web_api:app", host='192.168.0.125', port=port, reload=True, access_log=False)
