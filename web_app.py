@@ -400,3 +400,4 @@ if __name__ == '__main__':
     cdn = True if config['Web_APP']['PyWebIO_CDN'] == 'True' else False
     # 启动Web服务\Start Web service
     start_server(main, port=port, debug=False, cdn=cdn)
+
