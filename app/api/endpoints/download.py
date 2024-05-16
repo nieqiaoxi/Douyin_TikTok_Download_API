@@ -1,6 +1,8 @@
+import datetime
 import os
 import zipfile
 
+import win32file, pywintypes
 import aiofiles
 import httpx
 import yaml
@@ -25,47 +27,62 @@ async def fetch_data(url: str):
     }
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
+        print('fetch_data',response)
+
+        # response = await client.get(url, headers=headers,proxies={
+        #     'http': 'http://127.0.0.1:7890',
+        #     'https': 'http://127.0.0.1:7890'
+        # })
         response.raise_for_status()  # 确保响应是成功的
         return response
 
 
 @router.get("/download", summary="在线下载抖音|TikTok视频/图片/Online download Douyin|TikTok video/image")
-async def download_file_hybrid(request: Request,
-                               url: str, prefix: bool = True, with_watermark: bool = False):
-    # 是否开启此端点/Whether to enable this endpoint
-    if not config["API"]["Download_Switch"]:
-        code = 400
-        message = "Download endpoint is disabled."
-        return ErrorResponseModel(code=code, message=message, router=request.url.path, params=dict(request.query_params))
+async def download_file_hybrid( url: str, prefix: bool = True, with_watermark: bool = False):
+    request=None
+    if request: 
+        # 是否开启此端点/Whether to enable this endpoint
+        if not config["API"]["Download_Switch"]:
+            code = 400
+            message = "Download endpoint is disabled."
+            return ErrorResponseModel(code=code, message=message, router=request.url.path, params=dict(request.query_params))
 
-    # 开始解析数据/Start parsing data
+        # 开始解析数据/Start parsing data
+        try:
+            data = await HybridCrawler.hybrid_parsing_single_video(url, minimal=True)
+        except Exception as e:
+            code = 400
+            return ErrorResponseModel(code=code, message=str(e), router=request.url.path, params=dict(request.query_params))
+
     try:
         data = await HybridCrawler.hybrid_parsing_single_video(url, minimal=True)
-    except Exception as e:
-        code = 400
-        return ErrorResponseModel(code=code, message=str(e), router=request.url.path, params=dict(request.query_params))
-
+    except Exception as e:  
+        print('err',e)
+    print('url',url)
     # 开始下载文件/Start downloading files
     try:
         data_type = data.get('type')
         platform = data.get('platform')
         aweme_id = data.get('aweme_id')
+        desc = data.get('desc')
+        create_time = datetime.datetime.fromtimestamp(data.get('create_time'))  
+        author = data.get('author')
+        nickname = author.get('nickname')
+        sec_uid = author.get('sec_uid')
+    
         file_prefix = config.get("API").get("Download_File_Prefix") if prefix else ''
         download_path = os.path.join(config.get("API").get("Download_Path"), f"{platform}_{data_type}")
 
         # 确保目录存在/Ensure the directory exists
         os.makedirs(download_path, exist_ok=True)
-
         # 下载视频文件/Download video file
         if data_type == 'video':
-            file_name = f"{file_prefix}{platform}_{aweme_id}.mp4" if not with_watermark else f"{file_prefix}{platform}_{aweme_id}_watermark.mp4"
-            url = data.get('video_data').get('nwm_video_url_HQ') if not with_watermark else data.get('video_data').get(
-                'wm_video_url_HQ')
-            file_path = os.path.join(download_path, file_name)
+            # file_name = f"{file_prefix}{platform}_{aweme_id}.mp4" if not with_watermark else f"{file_prefix}{platform}_{aweme_id}_watermark.mp4"
+            file_name = f"{nickname}_{desc}_{sec_uid}.mp4"
 
-            # 判断文件是否存在，存在就直接返回
-            if os.path.exists(file_path):
-                return FileResponse(path=file_path, media_type='video/mp4', filename=file_name)
+            url = data.get('video_data').get('nwm_video_url_HQ') 
+            file_path = os.path.join(download_path, file_name)
+            print('file_path',file_path,'\n',create_time,'\n',url)
 
             # 获取视频文件
             response = await fetch_data(url)
@@ -73,12 +90,21 @@ async def download_file_hybrid(request: Request,
             # 保存文件
             async with aiofiles.open(file_path, 'wb') as out_file:
                 await out_file.write(response.content)
-
+            # 打开要修改的文件
+            handle = win32file.CreateFile(file_path, win32file.GENERIC_WRITE,
+                                        win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
+                                        None, win32file.OPEN_EXISTING,
+                                        win32file.FILE_ATTRIBUTE_NORMAL, None)
+            # 设置文件的创建时间和修改时间
+            date_time = pywintypes.Time(create_time)
+            win32file.SetFileTime(handle, date_time, date_time, None)
+            handle.close() # 关闭文件句柄
             # 返回文件内容
             return FileResponse(path=file_path, filename=file_name, media_type="video/mp4")
 
         # 下载图片文件/Download image file
         elif data_type == 'image':
+            print('data_type',data_type,'\n\n')
             # 压缩文件属性/Compress file properties
             zip_file_name = f"{file_prefix}{platform}_{aweme_id}_images.zip" if not with_watermark else f"{file_prefix}{platform}_{aweme_id}_images_watermark.zip"
             zip_file_path = os.path.join(download_path, zip_file_name)
@@ -92,8 +118,10 @@ async def download_file_hybrid(request: Request,
                 'image_data').get('watermark_image_list')
             image_file_list = []
             for url in urls:
+                print(url,'\n')
                 # 请求图片文件/Request image file
                 response = await fetch_data(url)
+                print('response',response,'\n')
                 index = int(urls.index(url))
                 content_type = response.headers.get('content-type')
                 file_format = content_type.split('/')[1]
@@ -104,7 +132,7 @@ async def download_file_hybrid(request: Request,
                 # 保存文件/Save file
                 async with aiofiles.open(file_path, 'wb') as out_file:
                     await out_file.write(response.content)
-
+            print('image_file_list',image_file_list,'\n\n')
             # 压缩文件/Compress file
             with zipfile.ZipFile(zip_file_path, 'w') as zip_file:
                 for image_file in image_file_list:
