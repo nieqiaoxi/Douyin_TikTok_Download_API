@@ -1,5 +1,6 @@
 import datetime
 import os
+import re
 import zipfile
 
 import win32file, pywintypes
@@ -73,23 +74,38 @@ async def download_file_hybrid( url: str, prefix: bool = True, with_watermark: b
         file_prefix = config.get("API").get("Download_File_Prefix") if prefix else ''
         download_path = os.path.join(config.get("API").get("Download_Path"), f"{platform}_{data_type}")
 
+        desc=desc.strip() + ' '  
+        pattern = r'#\w+\s'  
+        desc= re.sub(pattern, '', desc)  
+        desc = re.sub(r'[<>:"/\\|?*]', '!', desc)  
+
+        print('desc',desc,re.sub(pattern, '', desc)  )
+        nickname = re.sub(r'[<>:"/\\|?*]', '!', nickname)  
+        with open(os.path.join(config.get("API").get("Download_Path"), 'url_list.txt'), 'a', encoding='utf-8') as file:  
+            file.write(f"{nickname}  {url}  {sec_uid}\n")  # 写入昵称并添加换行符  
+            # file.write(url + '\n')  # 写入URL并添加换行符（如果URL也应该在新的一行）  
+
+        write_file_path=r'Z:\视频库\Douyin\video'
+        # write_file_path=r'E:\DATA\Downloads'
         # 确保目录存在/Ensure the directory exists
-        os.makedirs(download_path, exist_ok=True)
+        os.makedirs(write_file_path, exist_ok=True)
         # 下载视频文件/Download video file
         if data_type == 'video':
             # file_name = f"{file_prefix}{platform}_{aweme_id}.mp4" if not with_watermark else f"{file_prefix}{platform}_{aweme_id}_watermark.mp4"
-            file_name = f"{nickname}_{desc}_{sec_uid}.mp4"
-
+            file_name = f"{nickname}_{desc}.mp4"
+            file_name= file_name.replace('\n', '')  
+            print('file_name',file_name)
             url = data.get('video_data').get('nwm_video_url_HQ') 
-            file_path = os.path.join(download_path, file_name)
-            print('file_path',file_path,'\n',create_time,'\n',url)
+            file_path = os.path.join(write_file_path, file_name)
+            print('file_path',file_path)
+            print('url',url)
 
             # 获取视频文件
             response = await fetch_data(url)
-
             # 保存文件
             async with aiofiles.open(file_path, 'wb') as out_file:
                 await out_file.write(response.content)
+            
             # 打开要修改的文件
             handle = win32file.CreateFile(file_path, win32file.GENERIC_WRITE,
                                         win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
