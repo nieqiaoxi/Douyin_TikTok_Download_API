@@ -7,7 +7,7 @@ import win32file, pywintypes
 import aiofiles
 import httpx
 import yaml
-from fastapi import APIRouter, Request  # 导入FastAPI组件
+from fastapi import APIRouter, Request, Query  # 导入FastAPI组件
 from starlette.responses import FileResponse
 
 from app.api.models.APIResponseModel import ErrorResponseModel  # 导入响应模型
@@ -22,10 +22,10 @@ with open(config_path, 'r', encoding='utf-8') as file:
     config = yaml.safe_load(file)
 
 
-async def fetch_data(url: str):
+async def fetch_data(url: str, headers: dict = None):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
+    } if headers is None else headers.get('headers')
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
         print('fetch_data',response)
@@ -39,14 +39,49 @@ async def fetch_data(url: str):
 
 
 @router.get("/download", summary="在线下载抖音|TikTok视频/图片/Online download Douyin|TikTok video/image")
-async def download_file_hybrid( url: str, prefix: bool = True, with_watermark: bool = False):
+async def download_file_hybrid( url: str = Query(
+                                   example="https://www.douyin.com/video/7372484719365098803",
+                                   description="视频或图片的URL地址，也支持抖音|TikTok的分享链接，例如：https://v.douyin.com/e4J8Q7A/"),
+                               prefix: bool = True,
+                               with_watermark: bool = False):
+    """
+    # [中文]
+    ### 用途:
+    - 在线下载抖音|TikTok 无水印或有水印的视频/图片
+    - 通过传入的视频URL参数，获取对应的视频或图片数据，然后下载到本地。
+    - 如果你在尝试直接访问TikTok单一视频接口的JSON数据中的视频播放地址时遇到HTTP403错误，那么你可以使用此接口来下载视频。
+    - 这个接口会占用一定的服务器资源，所以在Demo站点是默认关闭的，你可以在本地部署后调用此接口。
+    ### 参数:
+    - url: 视频或图片的URL地址，也支持抖音|TikTok的分享链接，例如：https://v.douyin.com/e4J8Q7A/。
+    - prefix: 下载文件的前缀，默认为True，可以在配置文件中修改。
+    - with_watermark: 是否下载带水印的视频或图片，默认为False。
+    ### 返回:
+    - 返回下载的视频或图片文件响应。
+
+    # [English]
+    ### Purpose:
+    - Download Douyin|TikTok video/image with or without watermark online.
+    - By passing the video URL parameter, get the corresponding video or image data, and then download it to the local.
+    - If you encounter an HTTP403 error when trying to access the video playback address in the JSON data of the TikTok single video interface directly, you can use this interface to download the video.
+    - This interface will occupy a certain amount of server resources, so it is disabled by default on the Demo site, you can call this interface after deploying it locally.
+    ### Parameters:
+    - url: The URL address of the video or image, also supports Douyin|TikTok sharing links, for example: https://v.douyin.com/e4J8Q7A/.
+    - prefix: The prefix of the downloaded file, the default is True, and can be modified in the configuration file.
+    - with_watermark: Whether to download videos or images with watermarks, the default is False.
+    ### Returns:
+    - Return the response of the downloaded video or image file.
+
+    # [示例/Example]
+    url: https://www.douyin.com/video/7372484719365098803
+    """
     request=None
     if request: 
         # 是否开启此端点/Whether to enable this endpoint
         if not config["API"]["Download_Switch"]:
             code = 400
-            message = "Download endpoint is disabled."
-            return ErrorResponseModel(code=code, message=message, router=request.url.path, params=dict(request.query_params))
+            message = "Download endpoint is disabled in the configuration file. | 配置文件中已禁用下载端点。"
+            return ErrorResponseModel(code=code, message=message, router=request.url.path,
+                                  params=dict(request.query_params))
 
         # 开始解析数据/Start parsing data
         try:
@@ -101,7 +136,8 @@ async def download_file_hybrid( url: str, prefix: bool = True, with_watermark: b
             print('url',url)
 
             # 获取视频文件
-            response = await fetch_data(url)
+            response = await fetch_data(url) if platform == 'douyin' else await fetch_data(url,
+                                                                                           headers=await HybridCrawler.TikTokWebCrawler.get_tiktok_headers())
             # 保存文件
             async with aiofiles.open(file_path, 'wb') as out_file:
                 await out_file.write(response.content)
@@ -159,6 +195,6 @@ async def download_file_hybrid( url: str, prefix: bool = True, with_watermark: b
 
     # 异常处理/Exception handling
     except Exception as e:
+        print(e)
         code = 400
         return ErrorResponseModel(code=code, message=str(e), router=request.url.path, params=dict(request.query_params))
-

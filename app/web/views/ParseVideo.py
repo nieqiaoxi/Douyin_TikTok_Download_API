@@ -116,7 +116,7 @@ def parse_video():
             data = asyncio.run(HybridCrawler.hybrid_parsing_single_video(url, minimal=True))
             print('parse_video',url)
             # print('parse_video',data)
-            # asyncio.run(download.download_file_hybrid(url=url))
+            asyncio.run(download.download_file_hybrid(url=url))
 
         except Exception as e:
             error_msg = str(e)
