@@ -27,8 +27,8 @@ async def fetch_data(url: str, headers: dict = None):
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     } if headers is None else headers.get('headers')
     proxies={
-        'http://': 'http://127.0.0.1:7890',  
-        'https://': 'http://127.0.0.1:7890'  
+        # 'http://': 'http://127.0.0.1:7890',  
+        # 'https://': 'http://127.0.0.1:7890'  
     }
     async with httpx.AsyncClient(proxies=proxies) as client:
         response = await client.get(url, headers=headers)
@@ -120,6 +120,7 @@ async def download_file_hybrid(request: Request =None,
         pattern = r'#\w+\s'  
         desc= re.sub(pattern, '', desc)  
         desc = re.sub(r'[<>:"/\\|?*]', '!', desc)  
+        if len(desc) >= 35: desc=re.split(r'[。，]', desc)[0]  
         nickname = re.sub(r'[<>:"/\\|?*]', '!', nickname)  
 
         #记录URL日志
@@ -130,7 +131,8 @@ async def download_file_hybrid(request: Request =None,
 
         file_prefix = config.get("API").get("Download_File_Prefix") if prefix else ''
         download_path = os.path.join(config.get("API").get("Download_Path"), f"{platform}_{data_type}")
-        # download_path=r'Z:\视频库\Douyin\video'
+        download_path=r'Z:\视频库\Douyin\video'
+        download_path_img=r'Z:\图库\douyin'
 
         # 确保目录存在/Ensure the directory exists
         os.makedirs(download_path, exist_ok=True)
@@ -192,7 +194,7 @@ async def download_file_hybrid(request: Request =None,
                 file_name = f"{desc}_{index + 1}.{file_format}"
                 file_name= file_name.replace('\n', '')  
 
-                catalog_path = os.path.join(download_path,nickname)
+                catalog_path = os.path.join(download_path_img,nickname)
                 os.makedirs(catalog_path, exist_ok=True)
                 file_path=os.path.join(catalog_path,file_name)
                 # image_file_list.append(file_path)
