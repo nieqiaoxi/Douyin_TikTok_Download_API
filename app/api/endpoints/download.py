@@ -1,5 +1,5 @@
 import datetime
-import os
+import os,shutil 
 import re
 import zipfile
 
@@ -123,12 +123,6 @@ async def download_file_hybrid(request: Request =None,
         if len(desc) >= 35: desc=re.split(r'[。，]', desc)[0]  
         nickname = re.sub(r'[<>:"/\\|?*]', '!', nickname)  
 
-        #记录URL日志
-        with open(os.path.join(config.get("API").get("Download_Path"), 'url_list.txt'), 'a', encoding='utf-8') as file:  
-            file.write(f"{nickname}  {url}  {sec_uid}\n")  # 写入昵称并添加换行符  
-            # file.write(url + '\n')  # 写入URL并添加换行符（如果URL也应该在新的一行）
-
-
         file_prefix = config.get("API").get("Download_File_Prefix") if prefix else ''
         download_path = os.path.join(config.get("API").get("Download_Path"), f"{platform}_{data_type}")
         download_path=r'Z:\视频库\Douyin\video'
@@ -143,10 +137,13 @@ async def download_file_hybrid(request: Request =None,
             
             file_name = f"{nickname}_{desc}.mp4"
             file_name= file_name.replace('\n', '')  
+            file_name= file_name.replace(' ', '')  
             print('file_name',file_name)            
 
             url = data.get('video_data').get('nwm_video_url_HQ') if not with_watermark else data.get('video_data').get(
                 'wm_video_url_HQ')
+            
+            # print(data.get('video_data'))
             file_path = os.path.join(download_path, file_name)
 
             print('file_path',file_path,'\n','url',url)
@@ -159,13 +156,11 @@ async def download_file_hybrid(request: Request =None,
             # 获取视频文件
             response = await fetch_data(url) if platform == 'douyin' else await fetch_data(url,
                                                                                            headers=await HybridCrawler.TikTokWebCrawler.get_tiktok_headers())
-
-            alter_time(file_path,create_time)
             # 保存文件
             async with aiofiles.open(file_path, 'wb') as out_file:
                 await out_file.write(response.content)
 
-           
+            await alter_time(file_path,create_time)
 
             # 返回文件内容
             return FileResponse(path=file_path, filename=file_name, media_type="video/mp4")
@@ -204,12 +199,13 @@ async def download_file_hybrid(request: Request =None,
                 async with aiofiles.open(file_path, 'wb') as out_file:
                     await out_file.write(response.content)
                 #webp转png
+                new_file_path=file_path.replace('webp','png')
                 if 'webp' in file_name:
                     with Image.open(file_path) as img:  
-                        img.save(file_path.replace('webp','png'), 'PNG')  
+                        img.save(new_file_path, 'PNG')  
                     os.remove(file_path)
-                print(file_path,create_time)
-                await alter_time(file_path.replace('webp','png'),create_time)
+                shutil.copy(new_file_path, os.path.join(r'Y:\其他\中转\douyin_img',file_name.replace('webp','png')))  
+                await alter_time(new_file_path,create_time)
            
             # 压缩文件/Compress file
             # with zipfile.ZipFile(zip_file_path, 'w') as zip_file:
