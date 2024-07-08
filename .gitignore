@@ -132,3 +132,7 @@ dmypy.json
 .idea
 /app/api/endpoints/download/
 /download/
+
+Procfile
+Pipfile.lock
+Pipfile
