@@ -1,7 +1,7 @@
 import asyncio
 import os
 import time
-
+from datetime import datetime  
 import yaml
 from pywebio.input import *
 from pywebio.output import *
@@ -112,10 +112,9 @@ def parse_video():
         url_index = url_lists.index(url) + 1
         # 解析
         try:
-            
             data = asyncio.run(HybridCrawler.hybrid_parsing_single_video(url, minimal=True))
             print('parse_video',url)
-            asyncio.run(download.download_file_hybrid(url=url))
+            # asyncio.run(download.download_file_hybrid(url=url,data=data))
 
         except Exception as e:
             error_msg = str(e)
@@ -125,7 +124,7 @@ def parse_video():
             failed_list.append(url)
             #记录URL日志
             with open(os.path.join(config.get("API").get("Download_Path"), 'url_list.txt'), 'a', encoding='utf-8') as file:  
-                file.write(f"{data.get('author').get('nickname')}  {url} 【失败】\n")  # 写入昵称并添加换行符  
+                file.write(f"{url}【失败】 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")  # 写入昵称并添加换行符  
             continue
 
         # 创建一个视频/图集的公有变量
@@ -204,7 +203,7 @@ def parse_video():
         success_list.append(url)
         #记录URL日志
         with open(os.path.join(config.get("API").get("Download_Path"), 'url_list.txt'), 'a', encoding='utf-8') as file:  
-            file.write(f"{data.get('author').get('nickname')}  {url} \n")  # 写入昵称并添加换行符  
+            file.write(f"{url} {data.get('author').get('nickname')} {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} \n")  # 写入昵称并添加换行符  
             # file.write(url + '\n')  # 写入URL并添加换行符（如果URL也应该在新的一行）
         # print(success_count: {success_count}, success_list: {success_list}')
     # 全部解析完成跳出for循环/All parsing completed, break out of for loop

@@ -54,7 +54,7 @@ async def download_file_hybrid(request: Request =None,
                                    example="https://www.douyin.com/video/7372484719365098803",
                                    description="视频或图片的URL地址，也支持抖音|TikTok的分享链接，例如：https://v.douyin.com/e4J8Q7A/"),
                                prefix: bool = True,
-                               with_watermark: bool = False):
+                               with_watermark: bool = False,data = None,):
     """
     # [中文]
     ### 用途:
@@ -95,13 +95,13 @@ async def download_file_hybrid(request: Request =None,
         code = 400
         message = "Download endpoint is disabled in the configuration file. | 配置文件中已禁用下载端点。"
         return ErrorResponseModel(code=code, message=message, router=router,params=params)
-
     # 开始解析数据/Start parsing data
-    try:
-        data = await HybridCrawler.hybrid_parsing_single_video(url, minimal=True)
-    except Exception as e:
-        code = 400
-        return ErrorResponseModel(code=code, message=str(e), router=router, params=params)
+    if not data: 
+        try:
+            data = await HybridCrawler.hybrid_parsing_single_video(url, minimal=True)
+        except Exception as e:
+            code = 400
+            return ErrorResponseModel(code=code, message=str(e), router=router, params=params)
 
     # 开始下载文件/Start downloading files
     try:
@@ -119,14 +119,19 @@ async def download_file_hybrid(request: Request =None,
         desc=desc.strip() + ' '  
         pattern = r'#\w+\s'  
         desc= re.sub(pattern, '', desc)  
+        if '#' in desc: desc = desc.split('#')[0]  
         desc = re.sub(r'[<>:"/\\|?*]', '!', desc)  
         if len(desc) >= 35: desc=re.split(r'[。，]', desc)[0]  
+        desc= desc.replace(' ', '')  
         nickname = re.sub(r'[<>:"/\\|?*]', '!', nickname)  
 
         file_prefix = config.get("API").get("Download_File_Prefix") if prefix else ''
         download_path = os.path.join(config.get("API").get("Download_Path"), f"{platform}_{data_type}")
         download_path=r'Z:\视频库\Douyin\video'
         download_path_img=r'Z:\图库\douyin'
+
+
+        # print(data.get('video_data'))
 
         # 确保目录存在/Ensure the directory exists
         os.makedirs(download_path, exist_ok=True)
@@ -137,28 +142,25 @@ async def download_file_hybrid(request: Request =None,
             
             file_name = f"{nickname}_{desc}.mp4"
             file_name= file_name.replace('\n', '')  
-            file_name= file_name.replace(' ', '')  
             print('file_name',file_name)            
-
             url = data.get('video_data').get('nwm_video_url_HQ') if not with_watermark else data.get('video_data').get(
                 'wm_video_url_HQ')
             
-            # print(data.get('video_data'))
             file_path = os.path.join(download_path, file_name)
-
             print('file_path',file_path,'\n','url',url)
 
-
-            # 判断文件是否存在，存在就直接返回
-            if os.path.exists(file_path):
-                return FileResponse(path=file_path, media_type='video/mp4', filename=file_name)
-
             # 获取视频文件
-            response = await fetch_data(url) if platform == 'douyin' else await fetch_data(url,
-                                                                                           headers=await HybridCrawler.TikTokWebCrawler.get_tiktok_headers())
+            response = await fetch_data(url) if platform == 'douyin' else await fetch_data(url,headers=await HybridCrawler.TikTokWebCrawler.get_tiktok_headers())
+             # 判断文件是否存在，存在就直接返回
+            if os.path.exists(file_path):
+                existing_size = os.path.getsize(file_path)  
+                new_size = len(response.content) 
+                if existing_size == new_size:  
+                    return FileResponse(path=file_path, media_type='video/mp4', filename=file_name)
+                # else: print('hhhhhhhhh')
             # 保存文件
             async with aiofiles.open(file_path, 'wb') as out_file:
-                await out_file.write(response.content)
+                await out_file.write(response.content)  
 
             await alter_time(file_path,create_time)
 
