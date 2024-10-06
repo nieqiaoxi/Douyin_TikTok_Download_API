@@ -167,9 +167,9 @@ async def download_file_hybrid(request: Request =None,
             
             file_name = f"{nickname}_{desc}.mp4"
             file_name= file_name.replace('\n', '')  
-            print('file_name',file_name)            
-            url = data.get('video_data').get('nwm_video_url_HQ') if not with_watermark else data.get('video_data').get(
-                'wm_video_url_HQ')
+            print('file_name',file_name)       
+            #  wm_video_url	wm_video_url_HQ  nwm_video_url	nwm_video_url_HQ	    
+            url = data.get('video_data').get('nwm_video_url_HQ') if not with_watermark else data.get('video_data').get('nwm_video_url_HQ')
             
             file_path = os.path.join(download_path, file_name)
             # print('file_path',file_path)
@@ -177,7 +177,7 @@ async def download_file_hybrid(request: Request =None,
 
             # 获取视频文件
             response = await fetch_data(url) if platform == 'douyin' else await fetch_data(url,headers=await HybridCrawler.TikTokWebCrawler.get_tiktok_headers())
-             # 判断文件是否存在，存在就直接返回
+            # 判断文件是否存在，存在就直接返回
             new_size = len(response.content) 
             new_file_path = get_new_file_name(file_path,new_size)
             print('file_path',new_file_path)
