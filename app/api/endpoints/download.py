@@ -48,6 +48,30 @@ async def alter_time(file_path: str, create_time: str):
         win32file.SetFileTime(handle, date_time, date_time, None)
         handle.close() # 关闭文件句柄
 
+#获取新文件名
+def get_new_file_name(file_path: str,size: int):
+    pattern = r'_(.*?)(?=\.)'
+    if os.path.exists(file_path):
+        existing_size = os.path.getsize(file_path)  
+        if existing_size == size: return None
+        else:
+            _index = re.search(pattern, file_path).group(1) 
+            if _index: 
+                print('下标截取',_index)
+                if _index.isdigit(): new_name = f'_{str(int(_index)+1).zfill(3)}'
+                else: 
+                    # new_name = f"_{_index}_001"
+                    if size > existing_size:
+                        print(f"更新_{size}_{existing_size}")
+                        return file_path
+                    else: return None
+            else: 
+                new_name = f'_001'
+            print('new_name',new_name)
+            return get_new_file_name(re.sub(pattern, new_name, file_path),size)
+    else: return file_path
+
+
 @router.get("/download", summary="在线下载抖音|TikTok视频/图片/Online download Douyin|TikTok video/image")
 async def download_file_hybrid(request: Request =None,
                                url: str = Query(
@@ -121,13 +145,14 @@ async def download_file_hybrid(request: Request =None,
         desc= re.sub(pattern, '', desc)  
         if '#' in desc: desc = desc.split('#')[0]  
         desc = re.sub(r'[<>:"/\\|?*]', '!', desc)  
-        if len(desc) >= 35: desc=re.split(r'[。，]', desc)[0]  
+        if len(desc) >= 55: desc=re.split(r'[。，]', desc)[0]  
         desc= desc.replace(' ', '')  
         nickname = re.sub(r'[<>:"/\\|?*]', '!', nickname)  
 
         file_prefix = config.get("API").get("Download_File_Prefix") if prefix else ''
         download_path = os.path.join(config.get("API").get("Download_Path"), f"{platform}_{data_type}")
-        download_path=r'Z:\视频库\Douyin\video'
+        #download_path=r'Z:\视频库\Douyin\video'
+        download_path=r'D:\其他文件\DouyinVideo'
         download_path_img=r'Z:\图库\douyin'
 
 
@@ -147,17 +172,18 @@ async def download_file_hybrid(request: Request =None,
                 'wm_video_url_HQ')
             
             file_path = os.path.join(download_path, file_name)
-            print('file_path',file_path,'\n','url',url)
+            # print('file_path',file_path)
+            # print('url',url)
 
             # 获取视频文件
             response = await fetch_data(url) if platform == 'douyin' else await fetch_data(url,headers=await HybridCrawler.TikTokWebCrawler.get_tiktok_headers())
              # 判断文件是否存在，存在就直接返回
-            if os.path.exists(file_path):
-                existing_size = os.path.getsize(file_path)  
-                new_size = len(response.content) 
-                if existing_size == new_size:  
-                    return FileResponse(path=file_path, media_type='video/mp4', filename=file_name)
-                # else: print('hhhhhhhhh')
+            new_size = len(response.content) 
+            new_file_path = get_new_file_name(file_path,new_size)
+            print('file_path',new_file_path)
+            if new_file_path: file_path = new_file_path
+            else: return FileResponse(path=new_file_path, media_type='video/mp4', filename=file_name)
+            
             # 保存文件
             async with aiofiles.open(file_path, 'wb') as out_file:
                 await out_file.write(response.content)  
