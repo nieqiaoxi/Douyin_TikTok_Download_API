@@ -145,15 +145,19 @@ async def download_file_hybrid(request: Request =None,
         desc= re.sub(pattern, '', desc)  
         if '#' in desc: desc = desc.split('#')[0]  
         desc = re.sub(r'[<>:"/\\|?*]', '!', desc)  
-        if len(desc) >= 55: desc=re.split(r'[。，]', desc)[0]  
+        if len(desc) >= 55: desc=re.split(r'[ 。，]', desc)[0]  
         desc= desc.replace(' ', '')  
-        nickname = re.sub(r'[<>:"/\\|?*]', '!', nickname)  
+        nickname = re.sub(r'[<>:"/\\|?*]', '!', nickname) 
+        nickname = re.sub(r'\（.*?\）', '', nickname)  
+        nickname = re.sub(r'\(.*?\)', '', nickname)  
+ 
 
         file_prefix = config.get("API").get("Download_File_Prefix") if prefix else ''
         download_path = os.path.join(config.get("API").get("Download_Path"), f"{platform}_{data_type}")
-        #download_path=r'Z:\视频库\Douyin\video'
-        download_path=r'D:\其他文件\DouyinVideo'
-        download_path_img=r'Z:\图库\douyin'
+        download_path=r'Z:\视频库\Douyin\video'
+        # download_path=r'Z:\分享库\芷薇'
+        # download_path=r'D:\其他文件\video'
+        download_path_img=r'Z:\图片库\douyin\记录'
 
 
         # print(data.get('video_data'))

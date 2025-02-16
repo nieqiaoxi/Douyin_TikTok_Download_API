@@ -113,8 +113,8 @@ def parse_video():
         # 解析
         try:
             data = asyncio.run(HybridCrawler.hybrid_parsing_single_video(url, minimal=True))
-            # print(f"\nparse_video {url}")
-            # asyncio.run(download.download_file_hybrid(url=url,data=data))
+            print(f"\nparse_video {url}")
+            asyncio.run(download.download_file_hybrid(url=url,data=data))
 
         except Exception as e:
             error_msg = str(e)
@@ -128,7 +128,6 @@ def parse_video():
             continue
 
         # 创建一个视频/图集的公有变量
-        print('创建一个视频/图集的公有变量')
         url_type = ViewsUtils.t('视频', 'Video') if data.get('type') == 'video' else ViewsUtils.t('图片', 'Image')
         platform = data.get('platform')
         table_list = [
