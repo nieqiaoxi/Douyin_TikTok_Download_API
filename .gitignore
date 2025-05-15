@@ -131,7 +131,7 @@ dmypy.json
 # pycharm
 .idea
 /app/api/endpoints/download/
-/download/
+# /download/
 
 Procfile
 Pipfile.lock
