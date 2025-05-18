@@ -134,5 +134,3 @@ dmypy.json
 # /download/
 
 Procfile
-Pipfile.lock
-Pipfile
