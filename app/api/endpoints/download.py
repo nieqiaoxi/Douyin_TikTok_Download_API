@@ -157,7 +157,7 @@ async def download_file_hybrid(request: Request =None,
         download_path=r'Z:\视频库\Douyin\video'
         # download_path=r'Z:\分享库\芷薇'
         # download_path=r'D:\其他文件\video'
-        download_path_img=r'Z:\图片库\douyin\记录'
+        download_path_img=r'Z:\图片库\douyin\_记录'
 
 
         # print(data.get('video_data'))
