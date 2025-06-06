@@ -3,8 +3,7 @@ import os,shutil
 import re
 import zipfile
 
-import win32file, pywintypes
-import aiofiles
+# import win32file, pywintypes
 import httpx
 import yaml
 from PIL import Image  
@@ -38,15 +37,20 @@ async def fetch_data(url: str, headers: dict = None):
 
 #修改文件创建时间
 async def alter_time(file_path: str, create_time: str):
-        # 打开要修改的文件
-        handle = win32file.CreateFile(file_path, win32file.GENERIC_WRITE,
-                                    win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
-                                    None, win32file.OPEN_EXISTING,
-                                    win32file.FILE_ATTRIBUTE_NORMAL, None)
-        # 设置文件的创建时间和修改时间
-        date_time = pywintypes.Time(create_time)
-        win32file.SetFileTime(handle, date_time, date_time, None)
-        handle.close() # 关闭文件句柄
+        # # 打开要修改的文件
+        # handle = win32file.CreateFile(file_path, win32file.GENERIC_WRITE,
+        #                             win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
+        #                             None, win32file.OPEN_EXISTING,
+        #                             win32file.FILE_ATTRIBUTE_NORMAL, None)
+        # # 设置文件的创建时间和修改时间
+        # date_time = pywintypes.Time(create_time)
+        # win32file.SetFileTime(handle, date_time, date_time, None)
+        # handle.close() # 关闭文件句柄
+
+        dt = datetime.strptime(create_time, "%Y-%m-%d %H:%M:%S")
+        timestamp = dt.timestamp()
+        os.utime(file_path, (timestamp, timestamp))
+
 
 #获取新文件名
 def get_new_file_name(file_path: str,size: int):

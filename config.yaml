@@ -24,8 +24,8 @@ Web:
 # API
 API:
   # Network Configuration
-  Host_IP: 0.0.0.0    # default IP | 默认IP
-  Host_Port: 80    # default port is 80 | 默认端口为80
+  Host_IP: "::"   # default IP | 默认IP  0.0.0.0
+  Host_Port: 5606    # default port is 80 | 默认端口为80
   Docs_URL: /docs    # API documentation URL | API文档URL
   Redoc_URL: /redoc    # API documentation URL | API文档URL
 
