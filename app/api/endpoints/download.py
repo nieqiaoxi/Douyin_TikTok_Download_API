@@ -2,6 +2,7 @@ import datetime
 import os,shutil 
 import re
 import zipfile
+import aiofiles
 
 # import win32file, pywintypes
 import httpx
@@ -47,9 +48,10 @@ async def alter_time(file_path: str, create_time: str):
         # win32file.SetFileTime(handle, date_time, date_time, None)
         # handle.close() # 关闭文件句柄
 
-        dt = datetime.strptime(create_time, "%Y-%m-%d %H:%M:%S")
-        timestamp = dt.timestamp()
+        # dt = datetime.datetime.strptime(create_time, "%Y-%m-%d %H:%M:%S")
+        timestamp = create_time.timestamp()
         os.utime(file_path, (timestamp, timestamp))
+
 
 
 #获取新文件名
@@ -158,10 +160,12 @@ async def download_file_hybrid(request: Request =None,
 
         file_prefix = config.get("API").get("Download_File_Prefix") if prefix else ''
         download_path = os.path.join(config.get("API").get("Download_Path"), f"{platform}_{data_type}")
-        download_path=r'Z:\视频库\Douyin\video'
+        # download_path=r'Z:\视频库\Douyin\video'
+        download_path=r'/library/视频库/Douyin/video'
         # download_path=r'Z:\分享库\芷薇'
         # download_path=r'D:\其他文件\video'
-        download_path_img=r'Z:\图片库\douyin\_记录'
+        # download_path_img=r'Z:\图片库\douyin\_记录'
+        download_path_img=r'/library/图片库/douyin/_记录'
 
 
         # print(data.get('video_data'))
