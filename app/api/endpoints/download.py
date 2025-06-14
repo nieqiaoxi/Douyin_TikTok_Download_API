@@ -1,6 +1,6 @@
 import datetime
 import os,shutil 
-import re
+import re,time
 import zipfile
 import aiofiles
 
@@ -50,6 +50,7 @@ async def alter_time(file_path: str, create_time: str):
 
         # dt = datetime.datetime.strptime(create_time, "%Y-%m-%d %H:%M:%S")
         timestamp = create_time.timestamp()
+        current_time = time.time()
         os.utime(file_path, (timestamp, timestamp))
 
 
@@ -114,6 +115,7 @@ async def download_file_hybrid(request: Request =None,
 
     # [示例/Example]
     url: https://www.douyin.com/video/7372484719365098803
+    python -m pipenv shell
     """
     params=None
     router=None
