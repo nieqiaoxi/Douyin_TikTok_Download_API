@@ -1,10 +1,10 @@
 import datetime
 import os,shutil 
-import re
+import re,time
 import zipfile
-
-import win32file, pywintypes
 import aiofiles
+
+# import win32file, pywintypes
 import httpx
 import yaml
 from PIL import Image  
@@ -38,15 +38,22 @@ async def fetch_data(url: str, headers: dict = None):
 
 #修改文件创建时间
 async def alter_time(file_path: str, create_time: str):
-        # 打开要修改的文件
-        handle = win32file.CreateFile(file_path, win32file.GENERIC_WRITE,
-                                    win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
-                                    None, win32file.OPEN_EXISTING,
-                                    win32file.FILE_ATTRIBUTE_NORMAL, None)
-        # 设置文件的创建时间和修改时间
-        date_time = pywintypes.Time(create_time)
-        win32file.SetFileTime(handle, date_time, date_time, None)
-        handle.close() # 关闭文件句柄
+        # # 打开要修改的文件
+        # handle = win32file.CreateFile(file_path, win32file.GENERIC_WRITE,
+        #                             win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
+        #                             None, win32file.OPEN_EXISTING,
+        #                             win32file.FILE_ATTRIBUTE_NORMAL, None)
+        # # 设置文件的创建时间和修改时间
+        # date_time = pywintypes.Time(create_time)
+        # win32file.SetFileTime(handle, date_time, date_time, None)
+        # handle.close() # 关闭文件句柄
+
+        # dt = datetime.datetime.strptime(create_time, "%Y-%m-%d %H:%M:%S")
+        timestamp = create_time.timestamp()
+        current_time = time.time()
+        os.utime(file_path, (timestamp, timestamp))
+
+
 
 #获取新文件名
 def get_new_file_name(file_path: str,size: int):
@@ -108,6 +115,7 @@ async def download_file_hybrid(request: Request =None,
 
     # [示例/Example]
     url: https://www.douyin.com/video/7372484719365098803
+    python -m pipenv shell
     """
     params=None
     router=None
@@ -154,10 +162,12 @@ async def download_file_hybrid(request: Request =None,
 
         file_prefix = config.get("API").get("Download_File_Prefix") if prefix else ''
         download_path = os.path.join(config.get("API").get("Download_Path"), f"{platform}_{data_type}")
-        download_path=r'Z:\视频库\Douyin\video'
+        # download_path=r'Z:\视频库\Douyin\video'
+        download_path=r'/library/视频库/Douyin/video'
         # download_path=r'Z:\分享库\芷薇'
         # download_path=r'D:\其他文件\video'
-        download_path_img=r'Z:\图片库\douyin\_记录'
+        # download_path_img=r'Z:\图片库\douyin\_记录'
+        download_path_img=r'/library/图片库/douyin/_记录'
 
 
         # print(data.get('video_data'))
@@ -236,7 +246,7 @@ async def download_file_hybrid(request: Request =None,
                     with Image.open(file_path) as img:  
                         img.save(new_file_path, 'PNG')  
                     os.remove(file_path)
-                shutil.copy(new_file_path, os.path.join(r'Y:\其他\中转\douyin_img',file_name.replace('webp','png')))  
+                shutil.copy(new_file_path, os.path.join(r'/compress/其他/中转/douyin_img',file_name.replace('webp','png')))  
                 await alter_time(new_file_path,create_time)
            
             # 压缩文件/Compress file
