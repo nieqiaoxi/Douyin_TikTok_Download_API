@@ -1,8 +1,22 @@
 import datetime
-import os,shutil 
+import os,shutil,base64
 import re,time
 import zipfile
 import aiofiles
+import platform
+import struct
+
+try:
+    import xattr  # Linux/Mac 扩展属性模块
+except ImportError:
+    xattr = None
+
+try:
+    import win32file  # Windows 文件操作模块
+    import pywintypes
+except ImportError:
+    win32file = None
+    pywintypes = None
 
 # import win32file, pywintypes
 import httpx
@@ -38,21 +52,82 @@ async def fetch_data(url: str, headers: dict = None):
 
 #修改文件创建时间
 async def alter_time(file_path: str, create_time: str):
-        # # 打开要修改的文件
-        # handle = win32file.CreateFile(file_path, win32file.GENERIC_WRITE,
-        #                             win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
-        #                             None, win32file.OPEN_EXISTING,
-        #                             win32file.FILE_ATTRIBUTE_NORMAL, None)
-        # # 设置文件的创建时间和修改时间
-        # date_time = pywintypes.Time(create_time)
-        # win32file.SetFileTime(handle, date_time, date_time, None)
-        # handle.close() # 关闭文件句柄
-
-        # dt = datetime.datetime.strptime(create_time, "%Y-%m-%d %H:%M:%S")
+    if 'windows' in platform.system().lower():
+        # 打开要修改的文件
+        handle = win32file.CreateFile(file_path, win32file.GENERIC_WRITE,
+                                    win32file.FILE_SHARE_READ | win32file.FILE_SHARE_WRITE,
+                                    None, win32file.OPEN_EXISTING,
+                                    win32file.FILE_ATTRIBUTE_NORMAL, None)
+        # 设置文件的创建时间和修改时间
+        date_time = pywintypes.Time(create_time)
+        win32file.SetFileTime(handle, date_time, date_time, None)
+        handle.close() # 关闭文件句柄
+    else:
         timestamp = create_time.timestamp()
         current_time = time.time()
+        # 修改访问时间和修改时间（Linux 默认只能改这两个）
         os.utime(file_path, (timestamp, timestamp))
+        # 不存在win时间
+        if 'user.DOSATTRIB' not in xattr.list(str(file_path)): set_windows_times(file_path,timestamp,current_time)
+        # 尝试修改 crtime（需要 root 权限和 debugfs）
+        # if os.geteuid() == 0:  # 检查是否为 root
+        #     os.system(f'debugfs -w -R "set_inode_field {os.path.abspath(file_path)} crtime {current_time}" /dev/sdXX')
 
+# 设置win时间
+def set_windows_times(file_path: str, 
+                     create_time: datetime.datetime = None,
+                     edit_time: datetime.datetime = None):
+    """
+    设置文件的 Windows 创建/修改时间
+    (通过 user.DOSATTRIB xattr)
+    """
+    # 默认使用当前时间
+    now = datetime.datetime.now()
+    create_time = create_time or now
+    edit_time = edit_time or now
+    
+    # 转换时间为 Windows FILETIME
+    def datetime_to_filetime(dt):
+        epoch = datetime.datetime(1601, 1, 1,tzinfo=datetime.timezone.utc)
+
+        if isinstance(dt, (float, int)):
+            dt = datetime.datetime.fromtimestamp(dt, tz=datetime.timezone.utc)
+        elif isinstance(dt, str):
+            dt = datetime.datetime.fromisoformat(dt).astimezone(datetime.timezone.utc)
+
+        # 确保时区统一
+        if dt.tzinfo is None: dt = dt.replace(tzinfo=datetime.timezone.utc)
+        else: dt = dt.astimezone(datetime.timezone.utc)
+
+        # 高精度计算
+        delta = dt - epoch
+        microseconds = delta.days * 86400_000_000 + delta.seconds * 1_000_000 + delta.microseconds
+        return microseconds * 10  # 转换为100ns单位
+
+
+        # """高性能版本(适合批量处理)"""
+        # epoch = np.datetime64('1601-01-01T00:00:00', 'ns')
+        
+        # if isinstance(dt, (float, int)):
+        #     dt_ns = np.int64(dt * 1e9)
+        # elif isinstance(dt, str):
+        #     dt_ns = np.datetime64(dt, 'ns').astype('int64')
+        # else:
+        #     dt_ns = np.datetime64(dt.replace(tzinfo=None)).astype('int64')
+        
+        # return (dt_ns - epoch) // 100  # 转换为100ns单位
+    
+
+    # 标准头部信息（根据实际业务需求调整）
+    header = struct.pack('<QQ', 
+        0x0000040004000000,  # 文件属性标志
+        0x5100000020000000   # 系统保留字段
+    )
+
+    time_data = struct.pack('<QQ',datetime_to_filetime(create_time),datetime_to_filetime(edit_time))
+
+    # Base64 编码并设置属性
+    xattr.set(str(file_path), 'user.DOSATTRIB', base64.b64encode(header + time_data))
 
 
 #获取新文件名
@@ -196,7 +271,10 @@ async def download_file_hybrid(request: Request =None,
             new_file_path = get_new_file_name(file_path,new_size)
             print('file_path',new_file_path)
             if new_file_path: file_path = new_file_path
-            else: return FileResponse(path=new_file_path, media_type='video/mp4', filename=file_name)
+            # else: return FileResponse(path=new_file_path, media_type='video/mp4', filename=file_name)
+            else: 
+                await alter_time(file_path,create_time)
+                return FileResponse(path=new_file_path, media_type='video/mp4', filename=file_name)
             
             # 保存文件
             async with aiofiles.open(file_path, 'wb') as out_file:
