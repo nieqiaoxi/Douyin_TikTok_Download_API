@@ -1,6 +1,7 @@
 import asyncio
 import os
 import time
+from zoneinfo import ZoneInfo
 from datetime import datetime  
 import yaml
 from pywebio.input import *
@@ -13,6 +14,8 @@ from app.api.endpoints import download
 from crawlers.hybrid.hybrid_crawler import HybridCrawler
 
 HybridCrawler = HybridCrawler()
+
+tz = ZoneInfo('Asia/Shanghai')
 
 # 读取上级再上级目录的配置文件
 config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'config.yaml')
@@ -124,7 +127,7 @@ def parse_video():
             failed_list.append(url)
             # #记录URL日志
             with open(os.path.join(config.get("API").get("Download_Path"), 'url_list.txt'), 'a', encoding='utf-8') as file:  
-                file.write(f"{url}【失败】 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")  # 写入昵称并添加换行符  
+                file.write(f"{url}【失败】 {datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')}\n")  # 写入昵称并添加换行符  
             continue
 
         # 创建一个视频/图集的公有变量
@@ -203,7 +206,7 @@ def parse_video():
         success_list.append(url)
         # #记录URL日志
         with open(os.path.join(config.get("API").get("Download_Path"), 'url_list.txt'), 'a', encoding='utf-8') as file:  
-            file.write(f"{url} {data.get('author').get('nickname')} {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} \n")  # 写入昵称并添加换行符  
+            file.write(f"{url} {data.get('author').get('nickname')} {datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')} \n")  # 写入昵称并添加换行符  
             # file.write(url + '\n')  # 写入URL并添加换行符（如果URL也应该在新的一行）
         # print(success_count: {success_count}, success_list: {success_list}')
     # 全部解析完成跳出for循环/All parsing completed, break out of for loop
