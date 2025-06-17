@@ -1,6 +1,7 @@
 import asyncio
 import os
 import time
+os.environ['PYTHONTZPATH'] = ''
 from zoneinfo import ZoneInfo
 from datetime import datetime  
 import yaml

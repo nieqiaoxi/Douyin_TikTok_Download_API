@@ -67,11 +67,31 @@ async def alter_time(file_path: str, create_time: str):
         current_time = time.time()
         # 修改访问时间和修改时间（Linux 默认只能改这两个）
         os.utime(file_path, (timestamp, timestamp))
+
+        set_xattr(file_path)
         # 不存在win时间
-        if 'user.DOSATTRIB' not in xattr.list(str(file_path)): set_windows_times(file_path,timestamp,current_time)
+        # if 'user.DOSATTRIB' not in xattr.list(str(file_path)): set_windows_times(file_path,timestamp,current_time)
         # 尝试修改 crtime（需要 root 权限和 debugfs）
         # if os.geteuid() == 0:  # 检查是否为 root
-        #     os.system(f'debugfs -w -R "set_inode_field {os.path.abspath(file_path)} crtime {current_time}" /dev/sdXX')
+        #     os.system(f'debugfs -w -R "set_inode_field {os.path.abspath(file_path)} crtime {current_time}" /dev/sdXX') 
+
+
+def set_xattr(file_path):
+
+    # 设置 system.posix_acl_access（需要root权限）
+    # acl_value = base64.b64decode("AgAAAAEABwD/////AgAHAOgDAAACAAUA7AMAAAIAAAD+/wAABAAAAP////8IAAcAAAAAABAABwD/////IAAAAP////8=")
+    # xattr.set(file_path, "system.posix_acl_access", acl_value)
+
+    # 设置 user.DOSATTRIB  
+    # AAAEAAQAAABRAAAAIAAAAEVSmz3AIdt5gB/MKcOT2gE=  AAAEAAQAAABRAAAAIAAAAMk1eTDAIdt9gItSzJSR2gE=  AAAEAAQAAABRAAAAIAAAAH7ZpzTAIdt5gB/MKcOT2gE=  AAAEAAQAAABRAAAAIAAAAG98i02Xm9tnANV20/KT2gE=
+    # 2024/4/21 16:09  2024/4/18 21:32 2024/4/21 16:09  2024/4/21 21:50
+    dosattrib_value = base64.b64decode("AAAEAAQAAABRAAAAIAAAAQm1jQDAIdt5gB/MKcOT2gE=")
+    xattr.set(file_path, "user.DOSATTRIB", dosattrib_value)
+    
+
+    # 设置 user.qtag_id（字符串值）
+    # xattr.set(file_path, "user.qtag_id", "fe9b613e3a75485e9df6b69fa56816288626bfed0afb")
+
 
 # 设置win时间
 def set_windows_times(file_path: str, 
