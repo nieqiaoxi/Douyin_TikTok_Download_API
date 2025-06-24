@@ -2,7 +2,7 @@ import asyncio
 import os
 import time
 os.environ['PYTHONTZPATH'] = ''
-from zoneinfo import ZoneInfo
+from pytz import timezone
 from datetime import datetime  
 import yaml
 from pywebio.input import *
@@ -16,7 +16,7 @@ from crawlers.hybrid.hybrid_crawler import HybridCrawler
 
 HybridCrawler = HybridCrawler()
 
-tz = ZoneInfo('Asia/Shanghai')
+tz = timezone('Asia/Shanghai')
 
 # 读取上级再上级目录的配置文件
 config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'config.yaml')

@@ -5,6 +5,11 @@ import zipfile
 import aiofiles
 import platform
 import struct
+from importlib.resources import files
+from mutagen.mp4 import MP4, MP4Tags
+
+from pytz import timezone
+tz = timezone('Asia/Shanghai')
 
 try:
     import xattr  # Linux/Mac 扩展属性模块
@@ -76,6 +81,23 @@ async def alter_time(file_path: str, create_time: str):
         #     os.system(f'debugfs -w -R "set_inode_field {os.path.abspath(file_path)} crtime {current_time}" /dev/sdXX') 
 
 
+def set_custom_tag(path,url,create_time):
+    # 写入元数据
+    now = datetime.datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
+    create_time = create_time.strftime("%Y-%m-%d %H:%M:%S")
+    mp4 = MP4(path)
+    mp4.tags["\xa9day"] = [create_time]
+    mp4.tags["----:com.apple.iTunes:origin_link"] = [url.encode("utf-8")]
+    mp4.tags["origin_link"] = [url]
+
+    if not ('edit_time' in mp4.tags or '----:com.apple.iTunes:edit_time' in mp4.tags):
+        mp4.tags["----:com.apple.iTunes:edit_time"] = [now.encode("utf-8")]
+        mp4.tags["edit_time"] = [now]
+    mp4.save()
+
+    # for key, value in mp4.tags.items():
+    #     print(f"{key}: {[v.decode('utf-8') if isinstance(v, bytes) else v for v in value]}")
+
 def set_xattr(file_path):
 
     # 设置 system.posix_acl_access（需要root权限）
@@ -85,7 +107,7 @@ def set_xattr(file_path):
     # 设置 user.DOSATTRIB  
     # AAAEAAQAAABRAAAAIAAAAEVSmz3AIdt5gB/MKcOT2gE=  AAAEAAQAAABRAAAAIAAAAMk1eTDAIdt9gItSzJSR2gE=  AAAEAAQAAABRAAAAIAAAAH7ZpzTAIdt5gB/MKcOT2gE=  AAAEAAQAAABRAAAAIAAAAG98i02Xm9tnANV20/KT2gE=
     # 2024/4/21 16:09  2024/4/18 21:32 2024/4/21 16:09  2024/4/21 21:50
-    dosattrib_value = base64.b64decode("AAAEAAQAAABRAAAAIAAAAQm1jQDAIdt5gB/MKcOT2gE=")
+    dosattrib_value = base64.b64decode("AAAEAAQAAABRAAAAIAAAAEVSmz3AIdt5gBOMKcOT2gE=")
     xattr.set(file_path, "user.DOSATTRIB", dosattrib_value)
     
 
@@ -278,28 +300,31 @@ async def download_file_hybrid(request: Request =None,
             file_name= file_name.replace('\n', '')  
             print('file_name',file_name)       
             #  wm_video_url	wm_video_url_HQ  nwm_video_url	nwm_video_url_HQ	    
-            url = data.get('video_data').get('nwm_video_url_HQ') if not with_watermark else data.get('video_data').get('nwm_video_url_HQ')
+            _url = data.get('video_data').get('nwm_video_url_HQ') if not with_watermark else data.get('video_data').get('nwm_video_url_HQ')
             
             file_path = os.path.join(download_path, file_name)
             # print('file_path',file_path)
-            # print('url',url)
+            # print('url',_url)
 
             # 获取视频文件
-            response = await fetch_data(url) if platform == 'douyin' else await fetch_data(url,headers=await HybridCrawler.TikTokWebCrawler.get_tiktok_headers())
+            response = await fetch_data(_url) if platform == 'douyin' else await fetch_data(_url,headers=await HybridCrawler.TikTokWebCrawler.get_tiktok_headers())
             # 判断文件是否存在，存在就直接返回
             new_size = len(response.content) 
             new_file_path = get_new_file_name(file_path,new_size)
             print('file_path',new_file_path)
+
             if new_file_path: file_path = new_file_path
             # else: return FileResponse(path=new_file_path, media_type='video/mp4', filename=file_name)
             else: 
+                set_custom_tag(file_path,url,create_time)
                 await alter_time(file_path,create_time)
                 return FileResponse(path=new_file_path, media_type='video/mp4', filename=file_name)
             
             # 保存文件
             async with aiofiles.open(file_path, 'wb') as out_file:
                 await out_file.write(response.content)  
-
+           
+            set_custom_tag(file_path,url,create_time)
             await alter_time(file_path,create_time)
 
             # 返回文件内容
