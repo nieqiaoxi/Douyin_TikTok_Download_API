@@ -177,7 +177,10 @@ def get_new_file_name(file_path: str,size: int):
     pattern = r'_(.*?)(?=\.)'
     if os.path.exists(file_path):
         existing_size = os.path.getsize(file_path)  
-        if existing_size == size: return None
+        # print(existing_size,existing_size - 3584,size)
+        # 3.5k  3584   2.5k  2560
+        # if existing_size == size: return None
+        if abs(((existing_size - 3584) - size)) <= 2560 : return None
         else:
             _index = re.search(pattern, file_path).group(1) 
             if _index: 
@@ -280,11 +283,13 @@ async def download_file_hybrid(request: Request =None,
         file_prefix = config.get("API").get("Download_File_Prefix") if prefix else ''
         download_path = os.path.join(config.get("API").get("Download_Path"), f"{platform}_{data_type}")
         # download_path=r'Z:\视频库\Douyin\video'
-        download_path=r'/library/视频库/Douyin/video'
+        download_path=r'Q:\Library\视频库\Douyin\video'
+        # download_path=r'/library/视频库/Douyin/video'
         # download_path=r'Z:\分享库\芷薇'
         # download_path=r'D:\其他文件\video'
         # download_path_img=r'Z:\图片库\douyin\_记录'
-        download_path_img=r'/library/图片库/douyin/_记录'
+        download_path_img=r'Q:\Library\图片库\douyin\_记录'
+        # download_path_img=r'/library/图片库/douyin/_记录'
 
 
         # print(data.get('video_data'))
