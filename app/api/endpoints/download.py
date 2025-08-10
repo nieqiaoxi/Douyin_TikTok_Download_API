@@ -374,7 +374,7 @@ async def download_file_hybrid(request: Request =None,
                     with Image.open(file_path) as img:  
                         img.save(new_file_path, 'PNG')  
                     os.remove(file_path)
-                shutil.copy(new_file_path, os.path.join(r'/compress/其他/中转/douyin_img',file_name.replace('webp','png')))  
+                # shutil.copy(new_file_path, os.path.join(r'/compress/其他/中转/douyin_img',file_name.replace('webp','png')))  
                 await alter_time(new_file_path,create_time)
            
             # 压缩文件/Compress file
