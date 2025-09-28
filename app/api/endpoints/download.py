@@ -278,6 +278,7 @@ async def download_file_hybrid(request: Request =None,
         nickname = re.sub(r'[<>:"/\\|?*]', '!', nickname) 
         nickname = re.sub(r'\（.*?\）', '', nickname)  
         nickname = re.sub(r'\(.*?\)', '', nickname)  
+        nickname = nickname.strip()
  
 
         file_prefix = config.get("API").get("Download_File_Prefix") if prefix else ''
@@ -288,7 +289,7 @@ async def download_file_hybrid(request: Request =None,
         # download_path=r'Z:\分享库\芷薇'
         # download_path=r'D:\其他文件\video'
         # download_path_img=r'Z:\图片库\douyin\_记录'
-        download_path_img=r'Q:\Library\图片库\douyin\_记录'
+        download_path_img=r'Q:\Library\分享库\终端分享\douyin\_记录'
         # download_path_img=r'/library/图片库/douyin/_记录'
 
 
