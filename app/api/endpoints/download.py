@@ -71,7 +71,7 @@ async def alter_time(file_path: str, create_time: str):
         timestamp = create_time.timestamp()
         current_time = time.time()
         # 修改访问时间和修改时间（Linux 默认只能改这两个）
-        os.utime(file_path, (timestamp, timestamp))
+        # os.utime(file_path, (timestamp, timestamp))
 
         set_xattr(file_path)
         # 不存在win时间
@@ -284,13 +284,13 @@ async def download_file_hybrid(request: Request =None,
         file_prefix = config.get("API").get("Download_File_Prefix") if prefix else ''
         download_path = os.path.join(config.get("API").get("Download_Path"), f"{platform}_{data_type}")
         # download_path=r'Z:\视频库\Douyin\video'
-        download_path=r'Q:\Library\视频库\Douyin\video'
-        # download_path=r'/library/视频库/Douyin/video'
+        # download_path=r'Q:\Library\视频库\Douyin\video'
+        download_path=r'/Library/视频库/Douyin/video'
         # download_path=r'Z:\分享库\芷薇'
         # download_path=r'D:\其他文件\video'
         # download_path_img=r'Z:\图片库\douyin\_记录'
-        download_path_img=r'Q:\Library\分享库\终端分享\douyin\_记录'
-        # download_path_img=r'/library/图片库/douyin/_记录'
+        # download_path_img=r'Q:\Library\分享库\终端分享\douyin\_记录'
+        download_path_img=r'/Library/分享库/终端分享/douyin/_记录'
 
 
         # print(data.get('video_data'))
