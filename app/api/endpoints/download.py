@@ -357,7 +357,8 @@ async def download_file_hybrid(request: Request =None,
                 content_type = response.headers.get('content-type')
                 file_format = content_type.split('/')[1]
                 file_name = f"{file_prefix}{platform}_{aweme_id}_{index + 1}.{file_format}" if not with_watermark else f"{file_prefix}{platform}_{aweme_id}_{index + 1}_watermark.{file_format}"
-                file_name = f"{desc}_{index + 1}.{file_format}"
+                file_name = f"{desc}_{index + 1}_{datetime.datetime.now().strftime("%S.%f")[:-3]}.{file_format}"
+                print("file_name",file_name,)
                 file_name= file_name.replace('\n', '')  
 
                 catalog_path = os.path.join(download_path_img,nickname)
