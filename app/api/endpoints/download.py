@@ -302,7 +302,7 @@ async def download_file_hybrid(request: Request =None,
         if data_type == 'video':
             file_name = f"{file_prefix}{platform}_{aweme_id}.mp4" if not with_watermark else f"{file_prefix}{platform}_{aweme_id}_watermark.mp4"
             
-            file_name = f"{nickname}_{desc}.mp4"
+            file_name = f"{nickname.strip()}_{desc}.mp4"
             file_name= file_name.replace('\n', '')  
             print('file_name',file_name)       
             #  wm_video_url	wm_video_url_HQ  nwm_video_url	nwm_video_url_HQ	    
