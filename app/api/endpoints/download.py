@@ -49,9 +49,12 @@ async def fetch_data(url: str, headers: dict = None):
         # 'http://': 'http://127.0.0.1:7890',  
         # 'https://': 'http://127.0.0.1:7890'  
     }
-    async with httpx.AsyncClient(proxies=proxies) as client:
+    async with httpx.AsyncClient(proxies=proxies,follow_redirects=False) as client:
         response = await client.get(url, headers=headers)
-        # print('fetch_data',response)
+        # print('fetch_data',url,response,response.status_code)
+        if response.status_code in [301, 302, 303, 307, 308]:
+            # print("重定向",response.headers.get('Location'))
+            return await fetch_data(response.headers.get('Location'))
         response.raise_for_status()  # 确保响应是成功的
         return response
 
@@ -305,8 +308,10 @@ async def download_file_hybrid(request: Request =None,
             file_name = f"{nickname.strip()}_{desc}.mp4"
             file_name= file_name.replace('\n', '')  
             print('file_name',file_name)       
-            #  wm_video_url	wm_video_url_HQ  nwm_video_url	nwm_video_url_HQ	    
-            _url = data.get('video_data').get('nwm_video_url_HQ') if not with_watermark else data.get('video_data').get('nwm_video_url_HQ')
+            #  wm_video_url	wm_video_url_HQ  nwm_video_url	nwm_video_url_HQ	 
+            # print(data.get('video_data'))   
+            # _url = data.get('video_data').get('nwm_video_url_HQ') if not with_watermark else data.get('video_data').get('nwm_video_url_HQ')
+            _url = data.get('video_data').get('nwm_video_url') 
             
             file_path = os.path.join(download_path, file_name)
             # print('file_path',file_path)
