@@ -369,6 +369,7 @@ async def download_file_hybrid(request: Request =None,
                 catalog_path = os.path.join(download_path_img,nickname)
                 os.makedirs(catalog_path, exist_ok=True)
                 file_path=os.path.join(catalog_path,file_name)
+                print('----',file_path)
                 # image_file_list.append(file_path)
                 if os.path.exists(file_path):
                     return FileResponse(path=file_path, media_type='application/img', filename=file_name)
