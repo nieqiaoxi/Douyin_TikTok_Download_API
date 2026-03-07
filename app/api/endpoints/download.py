@@ -304,14 +304,16 @@ async def download_file_hybrid(request: Request =None,
         # 下载视频文件/Download video file
         if data_type == 'video':
             file_name = f"{file_prefix}{platform}_{aweme_id}.mp4" if not with_watermark else f"{file_prefix}{platform}_{aweme_id}_watermark.mp4"
-            
+            # print(len(desc))
+            if len(desc) > 40: desc = desc[:40]
             file_name = f"{nickname.strip()}_{desc}.mp4"
-            file_name= file_name.replace('\n', '')  
+            file_name= file_name.replace('\n', '') 
+         
             print('file_name',file_name)       
             #  wm_video_url	wm_video_url_HQ  nwm_video_url	nwm_video_url_HQ	 
             # print(data.get('video_data'))   
-            # _url = data.get('video_data').get('nwm_video_url_HQ') if not with_watermark else data.get('video_data').get('nwm_video_url_HQ')
-            _url = data.get('video_data').get('nwm_video_url') 
+            _url = data.get('video_data').get('nwm_video_url_HQ') if not with_watermark else data.get('video_data').get('nwm_video_url_HQ')
+            # _url = data.get('video_data').get('nwm_video_url') 
             
             file_path = os.path.join(download_path, file_name)
             # print('file_path',file_path)
