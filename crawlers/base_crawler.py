@@ -63,7 +63,7 @@ class BaseCrawler:
             proxies: dict = None,
             max_retries: int = 1,
             max_connections: int = 50,
-            timeout: int = 5,
+            timeout: int = 20,
             max_tasks: int = 50,
             crawler_headers: dict = {},
     ):
@@ -225,6 +225,7 @@ class BaseCrawler:
         Returns:
             response: 响应内容 (Response content)
         """
+       
         for attempt in range(self._max_retries):
             try:
                 response = await self.aclient.post(

@@ -105,7 +105,7 @@ class DouyinWebCrawler:
             params_dict["msToken"] = ''
             a_bogus = BogusManager.ab_model_2_endpoint(params_dict, kwargs["headers"]["User-Agent"])
             endpoint = f"{DouyinAPIEndpoints.POST_DETAIL}?{urlencode(params_dict)}&a_bogus={a_bogus}"
-
+            # print('endpoint',endpoint)
             response = await crawler.fetch_get_json(endpoint)
         return response
 

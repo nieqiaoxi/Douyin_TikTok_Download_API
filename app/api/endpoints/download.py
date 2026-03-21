@@ -300,7 +300,6 @@ async def download_file_hybrid(request: Request =None,
 
         # 确保目录存在/Ensure the directory exists
         os.makedirs(download_path, exist_ok=True)
-
         # 下载视频文件/Download video file
         if data_type == 'video':
             file_name = f"{file_prefix}{platform}_{aweme_id}.mp4" if not with_watermark else f"{file_prefix}{platform}_{aweme_id}_watermark.mp4"
@@ -313,14 +312,19 @@ async def download_file_hybrid(request: Request =None,
             #  wm_video_url	wm_video_url_HQ  nwm_video_url	nwm_video_url_HQ	 
             # print(data.get('video_data'))   
             _url = data.get('video_data').get('nwm_video_url_HQ') if not with_watermark else data.get('video_data').get('nwm_video_url_HQ')
-            # _url = data.get('video_data').get('nwm_video_url') 
+            # print(data) 
             
             file_path = os.path.join(download_path, file_name)
             # print('file_path',file_path)
             # print('url',_url)
 
             # 获取视频文件
-            response = await fetch_data(_url) if platform == 'douyin' else await fetch_data(_url,headers=await HybridCrawler.TikTokWebCrawler.get_tiktok_headers())
+            try:
+                response = await fetch_data(_url) if platform == 'douyin' else await fetch_data(_url,headers=await HybridCrawler.TikTokWebCrawler.get_tiktok_headers())
+            except Exception as e:
+                _url = data.get('video_data').get('nwm_video_url')
+                response = await fetch_data(_url) if platform == 'douyin' else await fetch_data(_url,headers=await HybridCrawler.TikTokWebCrawler.get_tiktok_headers())
+
             # 判断文件是否存在，存在就直接返回
             new_size = len(response.content) 
             new_file_path = get_new_file_name(file_path,new_size)
@@ -357,6 +361,7 @@ async def download_file_hybrid(request: Request =None,
             urls = data.get('image_data').get('no_watermark_image_list') if not with_watermark else data.get(
                 'image_data').get('watermark_image_list')
             image_file_list = []
+            nickname = nickname.replace('.', '')
             for url in urls:
                 # 请求图片文件/Request image file
                 response = await fetch_data(url)
@@ -365,7 +370,7 @@ async def download_file_hybrid(request: Request =None,
                 file_format = content_type.split('/')[1]
                 file_name = f"{file_prefix}{platform}_{aweme_id}_{index + 1}.{file_format}" if not with_watermark else f"{file_prefix}{platform}_{aweme_id}_{index + 1}_watermark.{file_format}"
                 file_name = f"{desc}_{index + 1}_{datetime.datetime.now().strftime("%S.%f")[:-3]}.{file_format}"
-                print("file_name",file_name,)
+                # print("file_name",file_name,)
                 file_name= file_name.replace('\n', '')  
 
                 catalog_path = os.path.join(download_path_img,nickname)
