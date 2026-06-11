@@ -275,10 +275,10 @@ async def download_file_hybrid(request: Request =None,
         pattern = r'#\w+\s'  
         desc= re.sub(pattern, '', desc)  
         if '#' in desc: desc = desc.split('#')[0]  
-        desc = re.sub(r'[<>:"/\\|?*]', '!', desc)  
+        desc = re.sub(r'[<>:"/\\|?*]', 'F', desc)  
         if len(desc) >= 55: desc=re.split(r'[ 。，]', desc)[0]  
         desc= desc.replace(' ', '')  
-        nickname = re.sub(r'[<>:"/\\|?*]', '!', nickname) 
+        nickname = re.sub(r'[<>:"/\\|?*]', 'F', nickname) 
         nickname = re.sub(r'\（.*?\）', '', nickname)  
         nickname = re.sub(r'\(.*?\)', '', nickname)  
         nickname = nickname.strip()

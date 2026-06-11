@@ -82,10 +82,39 @@ def parse_video():
     placeholder = ViewsUtils.t(
         "批量解析请直接粘贴多个口令或链接，无需使用符号分开，支持抖音和TikTok链接混合，暂时不支持作者主页链接批量解析。",
         "Batch parsing, please paste multiple passwords or links directly, no need to use symbols to separate, support for mixing Douyin and TikTok links, temporarily not support for author home page link batch parsing.")
+    
+    def on_input_change(data):
+        content = data
+        """保存内容到历史文件，只保留最后5次"""
+        # 读取现有内容
+        existing_records = []
+        with open(os.path.join(config.get("API").get("Download_Path"), 'input_history.txt'), 'r', encoding='utf-8') as f:  
+            content_parts = f.read().strip().split('\n============\n')
+            existing_records = [part for part in content_parts if part.strip()]
+        
+        # 创建新记录
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        new_record = f"时间：{timestamp}\n{content}"
+        
+        # 添加新记录到列表开头
+        existing_records.insert(0, new_record)
+        
+        # 只保留最后5次
+        existing_records = existing_records[:5]
+        
+        # 写入文件
+        with open(os.path.join(config.get("API").get("Download_Path"), 'input_history.txt'), 'w', encoding='utf-8') as f:  
+            for i, record in enumerate(existing_records):
+                f.write(record)
+                if i < len(existing_records) - 1:  # 最后一个不添加分隔符
+                    f.write('\n============\n')
+        
     input_data = textarea(
         ViewsUtils.t('请将抖音或TikTok的分享口令或网址粘贴于此',
                      "Please paste the share code or URL of [Douyin|TikTok] here"),
         type=TEXT,
+        live=True,
+        onchange=on_input_change,
         validate=valid_check,
         required=True,
         placeholder=placeholder,
