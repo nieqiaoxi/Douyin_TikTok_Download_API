@@ -9,14 +9,20 @@ from pywebio.input import *
 from pywebio.output import *
 from pywebio_battery import put_video
 
+
 from app.web.views.ViewsUtils import ViewsUtils
 from app.api.endpoints import download
 
 from crawlers.hybrid.hybrid_crawler import HybridCrawler
 
 HybridCrawler = HybridCrawler()
-
 tz = timezone('Asia/Shanghai')
+
+import asyncio
+import threading
+from pywebio.session import run_js, get_current_session, register_thread
+
+
 
 # 读取上级再上级目录的配置文件
 config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'config.yaml')
@@ -24,23 +30,68 @@ with open(config_path, 'r', encoding='utf-8') as file:
     config = yaml.safe_load(file)
 
 
+last_reset_time = 0
+count = 0
+timer = None
+
+
 # 校验输入值/Validate input value
 def valid_check(input_data: str):
-    # 检索出所有链接并返回列表/Retrieve all links and return a list
-    url_list = ViewsUtils.find_url(input_data)
-    # 总共找到的链接数量/Total number of links found
-    total_urls = len(url_list)
-    if total_urls == 0:
-        warn_info = ViewsUtils.t('没有检测到有效的链接，请检查输入的内容是否正确。',
-                                 'No valid link detected, please check if the input content is correct.')
-        return warn_info
-    else:
-        # 最大接受提交URL的数量/Maximum number of URLs accepted
-        max_urls = config['Web']['Max_Take_URLs']
-        if total_urls > int(max_urls):
-            warn_info = ViewsUtils.t(f'输入的链接太多啦，当前只会处理输入的前{max_urls}个链接！',
-                                     f'Too many links input, only the first {max_urls} links will be processed!')
+    global last_reset_time, count, timer  # Python 需要声明修改全局变量
+
+
+    def delayed_check():
+        global count
+        session.register_thread(threading.current_thread())
+        # 通过 JavaScript 给输入框赋值
+        from pywebio.session import run_js
+        existing_records = []
+        with open(os.path.join(config.get("API").get("Download_Path"), 'input_history.txt'), 'r', encoding='utf-8') as f:  
+            content_parts = f.read().strip().split('\n============\n')
+            existing_records = [part for part in content_parts if part.strip()]
+            
+        run_js(f"""
+            var ta = document.querySelector('textarea');
+            if (ta) {{
+                ta.value = `{'\n'.join(existing_records[count].split('\n')[1:])}`;
+                ta.dispatchEvent(new Event('input'));
+                ta.style.border = '2px solid orange';
+                
+                var len = ta.value.length;
+                ta.setSelectionRange(len, len);
+                ta.focus();
+            }}
+        """)
+        timer = None
+    
+    if not input_data or input_data.strip() == '':
+        now = int(time.time())  # 对应 os.time()
+        if now - last_reset_time >= 1.5:
+            count = -1
+            last_reset_time = now
+        count = count + 1 if count < 4 else 0
+
+        session = get_current_session()
+        if timer is not None: timer.cancel()
+        timer = threading.Timer(1.5, delayed_check)
+        timer.start()
+        return f"已赋值第{count + 1}条历史，请再次提交。"
+    else:         
+        # 检索出所有链接并返回列表/Retrieve all links and return a list
+        url_list = ViewsUtils.find_url(input_data)
+        # 总共找到的链接数量/Total number of links found
+        total_urls = len(url_list)
+        if total_urls == 0:
+            warn_info = ViewsUtils.t(f'没有检测到有效的链接，请检查输入的内容是否正确。',
+                                    'No valid link detected, please check if the input content is correct.')
             return warn_info
+        else:
+            # 最大接受提交URL的数量/Maximum number of URLs accepted
+            max_urls = config['Web']['Max_Take_URLs']
+            if total_urls > int(max_urls):
+                warn_info = ViewsUtils.t(f'输入的链接太多啦，当前只会处理输入的前{max_urls}个链接！',
+                                        f'Too many links input, only the first {max_urls} links will be processed!')
+                return warn_info
 
 
 # 错误处理/Error handling
@@ -79,6 +130,7 @@ def error_do(reason: str, value: str) -> None:
 
 
 def parse_video():
+    
     placeholder = ViewsUtils.t(
         "批量解析请直接粘贴多个口令或链接，无需使用符号分开，支持抖音和TikTok链接混合，暂时不支持作者主页链接批量解析。",
         "Batch parsing, please paste multiple passwords or links directly, no need to use symbols to separate, support for mixing Douyin and TikTok links, temporarily not support for author home page link batch parsing.")
@@ -96,8 +148,16 @@ def parse_video():
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         new_record = f"时间：{timestamp}\n{content}"
         
-        # 添加新记录到列表开头
-        existing_records.insert(0, new_record)
+        
+        # print(count,existing_records[count].split('\n')[1:][0][:30],"----",content[:30])
+
+        # 如果新内容与最新记录的内容相同，则覆盖（更新时间戳）
+        if existing_records[count].split('\n')[1:][0][:30] == content[:30]:
+            # 用新时间戳覆盖最新记录
+            existing_records[count] = new_record
+        else:
+            # 内容不同，插入到开头
+            existing_records.insert(0, new_record)
         
         # 只保留最后5次
         existing_records = existing_records[:5]
@@ -108,18 +168,19 @@ def parse_video():
                 f.write(record)
                 if i < len(existing_records) - 1:  # 最后一个不添加分隔符
                     f.write('\n============\n')
-        
+                    
     input_data = textarea(
         ViewsUtils.t('请将抖音或TikTok的分享口令或网址粘贴于此',
                      "Please paste the share code or URL of [Douyin|TikTok] here"),
         type=TEXT,
         live=True,
         onchange=on_input_change,
+        # required=True,
         validate=valid_check,
-        required=True,
         placeholder=placeholder,
         position=0)
-    url_lists = ViewsUtils.find_url(input_data)
+    url_lists = ViewsUtils.find_url(input_data)    
+    
     # 解析开始时间
     start = time.time()
     # 成功/失败统计
@@ -277,3 +338,4 @@ def parse_video():
                    outline=True)
         # 返回主页链接
         put_link(ViewsUtils.t('再来一波 (つ´ω`)つ', 'Another wave (つ´ω`)つ'), '/')
+

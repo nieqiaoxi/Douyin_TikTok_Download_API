@@ -157,11 +157,11 @@ def log_setup(log_to_console=True):
     # 初始化日志管理器
     log_manager = LogManager()
     log_manager.setup_logging(
-        level=logging.INFO, log_to_console=log_to_console, log_path=temp_log_dir
+        level=logging.DEBUG, log_to_console=log_to_console, log_path=temp_log_dir
     )
 
     # 只保留1000个日志文件
-    log_manager.clean_logs(1000)
+    log_manager.clean_logs(500)
 
     return logger
 

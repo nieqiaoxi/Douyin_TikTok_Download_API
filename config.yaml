@@ -8,7 +8,7 @@ Web:
 
   # APP Configuration
   PyWebIO_Theme: minty    # PyWebIO theme | PyWebIO主题
-  Max_Take_URLs: 1800  # Maximum number of URLs that can be taken at a time | 一次最多可以取得的URL数量
+  Max_Take_URLs: 2000  # Maximum number of URLs that can be taken at a time | 一次最多可以取得的URL数量
 
 
   # Web Information

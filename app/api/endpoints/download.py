@@ -84,16 +84,28 @@ async def alter_time(file_path: str, create_time: str):
         #     os.system(f'debugfs -w -R "set_inode_field {os.path.abspath(file_path)} crtime {current_time}" /dev/sdXX') 
 
 
-def set_custom_tag(path,url,create_time):
+def set_custom_tag(path,sec_uid,aweme_id,create_time, url= None):
     # 写入元数据
     now = datetime.datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
     create_time = create_time.strftime("%Y-%m-%d %H:%M:%S")
     mp4 = MP4(path)
-    mp4.tags["\xa9day"] = [create_time]
-    mp4.tags["----:com.apple.iTunes:origin_link"] = [url.encode("utf-8")]
-    mp4.tags["origin_link"] = [url]
-
-    if not ('edit_time' in mp4.tags or '----:com.apple.iTunes:edit_time' in mp4.tags):
+    
+    if create_time and not '----:com.apple.iTunes:create_time' in mp4.tags:
+        mp4.tags["\xa9day"] = [create_time]
+        mp4.tags["----:com.apple.iTunes:create_time"] = [create_time.encode("utf-8")]
+         
+    if url and not '----:com.apple.iTunes:origin_link' in mp4.tags:
+        mp4.tags["----:com.apple.iTunes:origin_link"] = [url.encode("utf-8")]
+        
+    if aweme_id and not ('identify' in mp4.tags or '----:com.apple.iTunes:identify' in mp4.tags):
+        mp4.tags["----:com.apple.iTunes:identify"] = [aweme_id.encode("utf-8")]
+        mp4.tags["identify"] = [aweme_id]
+    
+    if sec_uid and not ('sec_uid' in mp4.tags or '----:com.apple.iTunes:sec_uid' in mp4.tags):
+        mp4.tags["----:com.apple.iTunes:sec_uid"] = [sec_uid.encode("utf-8")]
+        mp4.tags["sec_uid"] = [sec_uid]
+    
+    if url:
         mp4.tags["----:com.apple.iTunes:edit_time"] = [now.encode("utf-8")]
         mp4.tags["edit_time"] = [now]
     mp4.save()
@@ -176,14 +188,28 @@ def set_windows_times(file_path: str,
 
 
 #获取新文件名
-def get_new_file_name(file_path: str,size: int):
+def get_new_file_name(file_path: str,new_size: int, aweme_id :str,url :str):
     pattern = r'_(.*?)(?=\.)'
+    
     if os.path.exists(file_path):
         existing_size = os.path.getsize(file_path)  
-        # print(existing_size,existing_size - 3584,size)
         # 3.5k  3584   2.5k  2560
-        # if existing_size == size: return None
-        if abs(((existing_size - 3584) - size)) <= 2560 : return None
+        
+        #获取旧文件元数据
+        mp4 = MP4(file_path)
+        origin_link_data = mp4.get("----:com.apple.iTunes:origin_link")
+        if origin_link_data: origin_link = origin_link_data[0].decode("utf-8") 
+        else: origin_link = ""
+        
+        identify_data = mp4.get("----:com.apple.iTunes:identify")
+        if identify_data: identify = identify_data[0].decode("utf-8") 
+        else: identify = "None"
+        
+        # if abs(((existing_size - 3584) - size)) <= 2560 : return None
+        print(identify," ",aweme_id," ",origin_link," ",url," ",new_size," ",existing_size," ",identify == aweme_id  or aweme_id in origin_link or url == origin_link," ",new_size > existing_size)
+        if identify == aweme_id  or aweme_id in origin_link or url == origin_link:
+            if new_size > existing_size: return file_path
+            else: return [file_path]
         else:
             _index = re.search(pattern, file_path).group(1) 
             if _index: 
@@ -191,14 +217,12 @@ def get_new_file_name(file_path: str,size: int):
                 if _index.isdigit(): new_name = f'_{str(int(_index)+1).zfill(3)}'
                 else: 
                     # new_name = f"_{_index}_001"
-                    if size > existing_size:
-                        print(f"更新_{size}_{existing_size}")
-                        return file_path
-                    else: return None
+                    if new_size > existing_size: return file_path
+                    else: return [file_path]
             else: 
                 new_name = f'_001'
             print('new_name',new_name)
-            return get_new_file_name(re.sub(pattern, new_name, file_path),size)
+            return get_new_file_name(re.sub(pattern, new_name, file_path),new_size,aweme_id,url)
     else: return file_path
 
 
@@ -327,21 +351,20 @@ async def download_file_hybrid(request: Request =None,
 
             # 判断文件是否存在，存在就直接返回
             new_size = len(response.content) 
-            new_file_path = get_new_file_name(file_path,new_size)
+            new_file_path = get_new_file_name(file_path,new_size,aweme_id,url)
             print('file_path',new_file_path)
 
-            if new_file_path: file_path = new_file_path
-            # else: return FileResponse(path=new_file_path, media_type='video/mp4', filename=file_name)
+            if not isinstance(new_file_path,list): file_path = new_file_path
             else: 
-                set_custom_tag(file_path,url,create_time)
-                await alter_time(file_path,create_time)
-                return FileResponse(path=new_file_path, media_type='video/mp4', filename=file_name)
-            
+                set_custom_tag(new_file_path[0],sec_uid,aweme_id,create_time)
+                return FileResponse(path=new_file_path[0], media_type='video/mp4', filename=file_name)
+
             # 保存文件
             async with aiofiles.open(file_path, 'wb') as out_file:
                 await out_file.write(response.content)  
-           
-            set_custom_tag(file_path,url,create_time)
+            
+                           
+            set_custom_tag(file_path,sec_uid,aweme_id,create_time,url)
             await alter_time(file_path,create_time)
 
             # 返回文件内容
